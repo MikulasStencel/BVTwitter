@@ -1,0 +1,16 @@
+<resources>
+    <string name="app_name">BVTwitter</string>
+    <string name="action_settings">Settings</string>
+    <string name="CONSUMER_KEY">deZ0o9TRsbHFMYG27K4GJs5JY</string>
+    <string name="CONSUMER_SECRET">HZGfh9NyvekEDCOIkZDAsgCd0QyeywwCATCMkln8C5aZuPKZzc</string>
+    <string name="retry">Retry</string>
+    <string name="search_twitter">Search Twitter</string>
+    <string name="error_text_too_short">Search text too short!</string>
+    <string name="error_text_too_long">Search text too long!</string>
+    <string name="keyword">Searching:</string>
+    <string name="empty_message">.</string>
+    <string name="stream_opened_message">Connection to live stream was successful</string>
+    <string name="stream_closed_message">Connection closed</string>
+    <string name="stream_forced_to_close_message">Connection is forced to close</string>
+    <string name="connecting_to_stream_message">keyword:</string>
+</resources>
