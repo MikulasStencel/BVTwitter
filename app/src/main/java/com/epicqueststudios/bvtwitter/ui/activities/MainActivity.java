@@ -1,6 +1,9 @@
 package com.epicqueststudios.bvtwitter.ui.activities;
 
+import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
+import android.databinding.DataBindingUtil;
+import android.databinding.ViewDataBinding;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
@@ -20,6 +23,7 @@ import android.widget.Toast;
 
 import com.epicqueststudios.bvtwitter.R;
 import com.epicqueststudios.bvtwitter.adapters.TweetAdapter;
+import com.epicqueststudios.bvtwitter.databinding.ActivityMainBinding;
 import com.epicqueststudios.bvtwitter.feature.lifespan.CleaningRoutine;
 import com.epicqueststudios.bvtwitter.feature.network.BasicTwitterClient;
 import com.epicqueststudios.bvtwitter.feature.sqlite.DatabaseHandler;
@@ -28,6 +32,7 @@ import com.epicqueststudios.bvtwitter.model.BVMessage;
 import com.epicqueststudios.bvtwitter.model.BVTweet;
 import com.epicqueststudios.bvtwitter.ui.widgets.WrapContentLinearLayoutManager;
 import com.epicqueststudios.bvtwitter.utils.NetworkUtils;
+import com.epicqueststudios.bvtwitter.viewmodel.TweetsViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -50,6 +55,8 @@ public class MainActivity extends RxActivity implements ActivityInterface {
     private List<BVTweet> tweets = new ArrayList<>();
     private static String DEFAULT_TAG = "android";
 
+    private TweetsViewModel viewModel;
+
     @BindView(R.id.recycler_view)
     RecyclerView recyclerView;
 
@@ -62,19 +69,20 @@ public class MainActivity extends RxActivity implements ActivityInterface {
     @BindView(R.id.fab)
     FloatingActionButton actionButton;
 
-    @BindView(R.id.progress_bar)
-    ProgressBar progressBar;
-
     private TweetAdapter adapter;
     private DisposableObserver<BVTweet> observer;
     private DatabaseHandler databaseHandler;
     private CleaningRoutine cleaningRoutine = null;
     private Object tweetsLock = new Object();
+    private ActivityMainBinding binding;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        setContentView(R.layout.activity_main);
+
+        viewModel = ViewModelProviders.of(this).get(TweetsViewModel.class);
+        binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
+        binding.setVm(viewModel);
 
         ButterKnife.bind(this);
 
@@ -151,7 +159,7 @@ public class MainActivity extends RxActivity implements ActivityInterface {
         final String last = PreferenceManager.getDefaultSharedPreferences(this).getString(KEY_LAST_SEARCH, null);
         if (last != null && !last.isEmpty()){
             recyclerView.post(() -> {
-                progressBar.setVisibility(View.VISIBLE);
+                viewModel.setIsLoading(true);
                 searchEditText.setText(last);
                 doNotOpenKeyboardOnStart();
 
@@ -159,7 +167,7 @@ public class MainActivity extends RxActivity implements ActivityInterface {
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe( result -> {
-                            progressBar.setVisibility(View.GONE);
+                            viewModel.setIsLoading(false);
                             updateTweets(result);
                             startStream(last);
                         } );

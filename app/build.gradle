@@ -21,6 +21,10 @@ android {
         targetCompatibility 1.8
         sourceCompatibility 1.8
     }
+
+    dataBinding {
+        enabled = true
+    }
 }
 
 dependencies {
@@ -63,5 +67,8 @@ dependencies {
     // framework for remote image loadin
     compile 'com.github.bumptech.glide:glide:4.2.0'
     annotationProcessor 'com.github.bumptech.glide:compiler:4.2.0'
+
+    // arch lifecycle - model-view-viewmodel
+    implementation "android.arch.lifecycle:extensions:1.0.0-alpha9-1"
 
 }
