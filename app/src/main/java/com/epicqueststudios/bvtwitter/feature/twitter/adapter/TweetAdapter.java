@@ -1,12 +1,12 @@
-package com.epicqueststudios.bvtwitter.adapters;
+package com.epicqueststudios.bvtwitter.feature.twitter.adapter;
 
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
 import com.epicqueststudios.bvtwitter.R;
-import com.epicqueststudios.bvtwitter.model.BVMessage;
-import com.epicqueststudios.bvtwitter.model.BVTweet;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVMessageModel;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 import com.epicqueststudios.bvtwitter.ui.viewholders.AbstractViewHolder;
 import com.epicqueststudios.bvtwitter.ui.viewholders.MessageViewHolder;
 import com.epicqueststudios.bvtwitter.ui.viewholders.TweetViewHolder;
@@ -17,14 +17,14 @@ public class TweetAdapter extends RecyclerView.Adapter<AbstractViewHolder> {
 
     private static final int TYPE_TWEET = 1;
     private static final int TYPE_MESSAGE = 2;
-    private List<BVTweet> tweets;
+    private List<BVTweetModel> tweets;
 
-    public TweetAdapter(List<BVTweet> tweets) {
+    public TweetAdapter(List<BVTweetModel> tweets) {
         super();
         setTweets(tweets);
     }
 
-    public void setTweets(List<BVTweet> tweets) {
+    public void setTweets(List<BVTweetModel> tweets) {
         this.tweets = tweets;
     }
 
@@ -43,13 +43,13 @@ public class TweetAdapter extends RecyclerView.Adapter<AbstractViewHolder> {
 
     @Override
     public void onBindViewHolder(AbstractViewHolder holder, int position) {
-        BVTweet tweet = tweets.get(position);
+        BVTweetModel tweet = tweets.get(position);
         holder.bindView(tweet);
     }
 
     @Override
     public int getItemViewType(int position) {
-        if (tweets.get(position) instanceof BVMessage)
+        if (tweets.get(position) instanceof BVMessageModel)
             return TYPE_MESSAGE;
         return TYPE_TWEET;
     }

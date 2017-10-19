@@ -1,10 +1,10 @@
 package com.epicqueststudios.bvtwitter.interfaces;
 
-import com.epicqueststudios.bvtwitter.model.BVTweet;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 
 import java.util.List;
 
 public interface ActivityInterface {
-    List<BVTweet> getTweets();
+    List<BVTweetModel> getTweets();
     boolean isOnline();
 }

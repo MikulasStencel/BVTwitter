@@ -6,7 +6,7 @@ import android.widget.TextView;
 
 import com.bumptech.glide.Glide;
 import com.epicqueststudios.bvtwitter.R;
-import com.epicqueststudios.bvtwitter.model.BVTweet;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -28,7 +28,7 @@ public class TweetViewHolder extends AbstractViewHolder{
     }
 
     @Override
-    public void bindView(BVTweet tweet) {
+    public void bindView(BVTweetModel tweet) {
         title.setText(tweet.getTweetTitle());
         text.setText(tweet.getMessage());
         String url = tweet.getImageUrl();

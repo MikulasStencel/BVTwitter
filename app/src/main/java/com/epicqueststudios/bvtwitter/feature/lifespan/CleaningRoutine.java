@@ -4,9 +4,8 @@ import android.util.Log;
 
 import com.epicqueststudios.bvtwitter.feature.sqlite.DatabaseHandler;
 import com.epicqueststudios.bvtwitter.interfaces.ActivityInterface;
-import com.epicqueststudios.bvtwitter.model.BVTweet;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 
-import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -23,7 +22,7 @@ public class CleaningRoutine {
     private final ActivityInterface activityInterface;
     private final DatabaseHandler databaseHandler;
     private DisposableObserver<Long> cleanRoutine = null;
-    private Observable<List<BVTweet>> cleanObserver;
+    private Observable<List<BVTweetModel>> cleanObserver;
 
     public CleaningRoutine(Object tweetsLock, ActivityInterface activityInterface, DatabaseHandler databaseHandler) {
         this.tweetsLock = tweetsLock;
@@ -31,7 +30,7 @@ public class CleaningRoutine {
         this.databaseHandler = databaseHandler;
     }
 
-    public Observable<List<BVTweet>> startProcess() {
+    public Observable<List<BVTweetModel>> startProcess() {
         cleanObserver = Observable.interval(1000, CHECK_EXPIRED_TWEETS_TIME_INTERVAL, TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
                 .map(a -> checkAndDeleteExpiredTweets(activityInterface.getTweets()))
@@ -39,7 +38,7 @@ public class CleaningRoutine {
         return cleanObserver;
     }
 
-    private List<BVTweet> checkAndDeleteExpiredTweets(List<BVTweet> oldTweets) {
+    private List<BVTweetModel> checkAndDeleteExpiredTweets(List<BVTweetModel> oldTweets) {
         if (!activityInterface.isOnline()){
             return oldTweets;
         }

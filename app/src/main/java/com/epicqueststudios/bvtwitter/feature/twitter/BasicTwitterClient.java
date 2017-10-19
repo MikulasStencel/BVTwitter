@@ -1,14 +1,15 @@
-package com.epicqueststudios.bvtwitter.feature.network;
+package com.epicqueststudios.bvtwitter.feature.twitter;
 
 
 import android.content.Context;
 import android.util.Log;
 
 import com.epicqueststudios.bvtwitter.R;
+import com.epicqueststudios.bvtwitter.base.feature.BaseClientApi;
 import com.epicqueststudios.bvtwitter.feature.lifespan.LifeSpanTweetFactory;
 import com.epicqueststudios.bvtwitter.feature.lifespan.TimeLifeSpan;
-import com.epicqueststudios.bvtwitter.model.BVMessage;
-import com.epicqueststudios.bvtwitter.model.BVTweet;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVMessageModel;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -26,7 +27,7 @@ import okhttp3.logging.HttpLoggingInterceptor;
 import se.akerfeldt.okhttp.signpost.OkHttpOAuthConsumer;
 import se.akerfeldt.okhttp.signpost.SigningInterceptor;
 
-public class BasicTwitterClient {
+public class BasicTwitterClient extends BaseClientApi {
     private static final String TAG = BasicTwitterClient.class.getSimpleName();
     private static final String STREAM_URL = "https://stream.twitter.com/1.1/statuses/filter.json?track=";
     private final Context context;
@@ -65,15 +66,15 @@ public class BasicTwitterClient {
         return new Request.Builder().url(streamUrl).build();
     }
 
-    public Observable<BVTweet> getStream(String text){
-        return Observable.create((ObservableOnSubscribe<BVTweet>) tweetEmitter -> {
+    public Observable<BVTweetModel> getStream(String text){
+        return Observable.create((ObservableOnSubscribe<BVTweetModel>) tweetEmitter -> {
             Request request = BasicTwitterClient.this.buildUrlRequest(STREAM_URL.concat(text));
             BufferedReader reader = null;
             try {
-                tweetEmitter.onNext(new BVMessage(context.getString(R.string.connecting_to_stream_message) + " " +text));
+                tweetEmitter.onNext(new BVMessageModel(context.getString(R.string.connecting_to_stream_message) + " " +text));
                 Response response = client.newCall(request).execute();
                 if (response.isSuccessful()) {
-                    tweetEmitter.onNext(new BVMessage(context.getString(R.string.stream_opened_message)));
+                    tweetEmitter.onNext(new BVMessageModel(context.getString(R.string.stream_opened_message)));
                     Log.d(TAG, "Stream opened.");
                     InputStream in = response.body().byteStream();
                     reader = new BufferedReader(new InputStreamReader(in));
@@ -98,7 +99,7 @@ public class BasicTwitterClient {
         }).doOnSubscribe(v -> bKeepRunning = true);
     }
 
-    private void parseTweets(BufferedReader reader, ObservableEmitter<BVTweet> tweetEmitter) {
+    private void parseTweets(BufferedReader reader, ObservableEmitter<BVTweetModel> tweetEmitter) {
         try {
             String line = "";
             do {
@@ -106,14 +107,14 @@ public class BasicTwitterClient {
                 if (line == null || line.isEmpty()) {
                     continue;
                 }
-                BVTweet tweet = new BVTweet(line);
+                BVTweetModel tweet = new BVTweetModel(line);
                 if (tweet.hasMessage()) {
                     tweet.setLifeSpan(new TimeLifeSpan(LifeSpanTweetFactory.DEFAULT_EXPIRE));
                     tweetEmitter.onNext(tweet);
                 }
             } while (bKeepRunning);
 
-            tweetEmitter.onNext(new BVMessage(context.getString(R.string.stream_closed_message)));
+            tweetEmitter.onNext(new BVMessageModel(context.getString(R.string.stream_closed_message)));
             tweetEmitter.onComplete();
         } catch (Exception e) {
             if (!tweetEmitter.isDisposed()) {

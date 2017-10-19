@@ -5,7 +5,7 @@
     <data>
         <variable
             name="vm"
-            type="com.epicqueststudios.bvtwitter.viewmodel.TweetsViewModel" />
+            type="com.epicqueststudios.bvtwitter.feature.twitter.viewmodel.TweetsViewModel" />
 
         <import type="android.view.View" />
     </data>

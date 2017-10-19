@@ -10,20 +10,20 @@ import android.net.ConnectivityManager;
 import android.net.NetworkInfo;
 import android.os.Build;
 import android.os.Bundle;
-import android.support.annotation.Keep;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.util.Log;
 
 import com.epicqueststudios.bvtwitter.interfaces.LifeSpanTweetInterface;
-import com.epicqueststudios.bvtwitter.model.BVTweet;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 
-import static com.epicqueststudios.bvtwitter.feature.lifespan.LifeSpanTweetFactory.TYPE.BASIC_TIME;
 import static com.epicqueststudios.bvtwitter.feature.lifespan.LifeSpanTweetFactory.TYPE.KEEP_ON_NO_NETWORK;
 
 
-public class KeepOnNoNetwork extends BroadcastReceiver implements LifeSpanTweetInterface, Application.ActivityLifecycleCallbacks {
+public class KeepOnNoNetwork extends BroadcastReceiver implements LifeSpanTweetInterface, Application.ActivityLifecycleCallbacks, Parcelable {
     private static final String TAG = KeepOnNoNetwork.class.getSimpleName();
     private static KeepOnNoNetwork instance;
-    private final Activity context;
+    transient private final Activity context;
     boolean bConnected = false;
 
     private KeepOnNoNetwork(Activity context){
@@ -54,7 +54,7 @@ public class KeepOnNoNetwork extends BroadcastReceiver implements LifeSpanTweetI
     }
 
     @Override
-    public boolean isExpired(BVTweet tweet, long now) {
+    public boolean isExpired(BVTweetModel tweet, long now) {
         return !bConnected;
     }
 
@@ -125,4 +125,33 @@ public class KeepOnNoNetwork extends BroadcastReceiver implements LifeSpanTweetI
     }
 
 
+
+    protected KeepOnNoNetwork(Parcel in) {
+        context = (Activity) in.readValue(Activity.class.getClassLoader());
+        bConnected = in.readByte() != 0x00;
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeValue(context);
+        dest.writeByte((byte) (bConnected ? 0x01 : 0x00));
+    }
+
+    @SuppressWarnings("unused")
+    public static final Parcelable.Creator<KeepOnNoNetwork> CREATOR = new Parcelable.Creator<KeepOnNoNetwork>() {
+        @Override
+        public KeepOnNoNetwork createFromParcel(Parcel in) {
+            return new KeepOnNoNetwork(in);
+        }
+
+        @Override
+        public KeepOnNoNetwork[] newArray(int size) {
+            return new KeepOnNoNetwork[size];
+        }
+    };
 }

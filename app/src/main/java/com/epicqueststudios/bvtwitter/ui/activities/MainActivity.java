@@ -3,7 +3,6 @@ package com.epicqueststudios.bvtwitter.ui.activities;
 import android.arch.lifecycle.ViewModelProviders;
 import android.content.Context;
 import android.databinding.DataBindingUtil;
-import android.databinding.ViewDataBinding;
 import android.os.Bundle;
 import android.preference.PreferenceManager;
 import android.support.design.widget.FloatingActionButton;
@@ -18,21 +17,20 @@ import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.Button;
 import android.widget.EditText;
-import android.widget.ProgressBar;
 import android.widget.Toast;
 
 import com.epicqueststudios.bvtwitter.R;
-import com.epicqueststudios.bvtwitter.adapters.TweetAdapter;
+import com.epicqueststudios.bvtwitter.feature.twitter.adapter.TweetAdapter;
 import com.epicqueststudios.bvtwitter.databinding.ActivityMainBinding;
 import com.epicqueststudios.bvtwitter.feature.lifespan.CleaningRoutine;
-import com.epicqueststudios.bvtwitter.feature.network.BasicTwitterClient;
+import com.epicqueststudios.bvtwitter.feature.twitter.BasicTwitterClient;
 import com.epicqueststudios.bvtwitter.feature.sqlite.DatabaseHandler;
 import com.epicqueststudios.bvtwitter.interfaces.ActivityInterface;
-import com.epicqueststudios.bvtwitter.model.BVMessage;
-import com.epicqueststudios.bvtwitter.model.BVTweet;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVMessageModel;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 import com.epicqueststudios.bvtwitter.ui.widgets.WrapContentLinearLayoutManager;
 import com.epicqueststudios.bvtwitter.utils.NetworkUtils;
-import com.epicqueststudios.bvtwitter.viewmodel.TweetsViewModel;
+import com.epicqueststudios.bvtwitter.feature.twitter.viewmodel.TweetsViewModel;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -52,8 +50,7 @@ public class MainActivity extends RxActivity implements ActivityInterface {
     private static final int MIN_AUTO_SCROLL_OFFSET = 60;
     private static final String KEY_LAST_SEARCH = "prefs_last_search";
     private BasicTwitterClient twitterClient;
-    private List<BVTweet> tweets = new ArrayList<>();
-    private static String DEFAULT_TAG = "android";
+    private List<BVTweetModel> tweets = new ArrayList<>();
 
     private TweetsViewModel viewModel;
 
@@ -70,7 +67,7 @@ public class MainActivity extends RxActivity implements ActivityInterface {
     FloatingActionButton actionButton;
 
     private TweetAdapter adapter;
-    private DisposableObserver<BVTweet> observer;
+    private DisposableObserver<BVTweetModel> observer;
     private DatabaseHandler databaseHandler;
     private CleaningRoutine cleaningRoutine = null;
     private Object tweetsLock = new Object();
@@ -132,10 +129,10 @@ public class MainActivity extends RxActivity implements ActivityInterface {
     @Override
     protected void onResume() {
         super.onResume();
-        Observable<List<BVTweet>> observer = cleaningRoutine.startProcess();
-        observer.subscribeWith(new DisposableObserver<List<BVTweet>>() {
+        Observable<List<BVTweetModel>> observer = cleaningRoutine.startProcess();
+        observer.subscribeWith(new DisposableObserver<List<BVTweetModel>>() {
             @Override
-            public void onNext(List<BVTweet> otweets) {
+            public void onNext(List<BVTweetModel> otweets) {
                 updateTweets(otweets);
             }
 
@@ -180,7 +177,7 @@ public class MainActivity extends RxActivity implements ActivityInterface {
         getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
     }
 
-    private void updateTweets(List<BVTweet> result) {
+    private void updateTweets(List<BVTweetModel> result) {
         synchronized (tweetsLock) {
             tweets = result;
             adapter.setTweets(tweets);
@@ -214,11 +211,11 @@ public class MainActivity extends RxActivity implements ActivityInterface {
         saveLastSearchedKeyword(text);
         Log.d(TAG, "Starting stream. text: "+text);
         buttonStart.setVisibility(View.GONE);
-        Observable<BVTweet> stream = twitterClient.getStream(text);
+        Observable<BVTweetModel> stream = twitterClient.getStream(text);
 
-        observer = stream.observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribeWith(new DisposableObserver<BVTweet>() {
+        observer = stream.observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribeWith(new DisposableObserver<BVTweetModel>() {
             @Override
-            public void onNext(BVTweet bvTweet) {
+            public void onNext(BVTweetModel bvTweet) {
                 Log.d(TAG, "Observer onSuccess: " + bvTweet.getMessage());
                 synchronized (tweetsLock) {
                     tweets.add(0, bvTweet);
@@ -234,7 +231,7 @@ public class MainActivity extends RxActivity implements ActivityInterface {
                 Log.e(TAG, "Observer Error: " + e.getMessage(), e);
                 Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
                 synchronized (tweetsLock) {
-                    tweets.add(0, new BVMessage(getString(R.string.stream_forced_to_close_message)));
+                    tweets.add(0, new BVMessageModel(getString(R.string.stream_forced_to_close_message)));
                     adapter.setTweets(tweets);
                 }
                 notifyAdapter();
@@ -245,7 +242,7 @@ public class MainActivity extends RxActivity implements ActivityInterface {
             public void onComplete() {
                 Log.d(TAG, "Observer onComplete: ");
                 synchronized (tweetsLock) {
-                    tweets.add(0, new BVMessage(getString(R.string.stream_closed_message)));
+                    tweets.add(0, new BVMessageModel(getString(R.string.stream_closed_message)));
                     adapter.setTweets(tweets);
                 }
                 notifyAdapter();
@@ -271,14 +268,14 @@ public class MainActivity extends RxActivity implements ActivityInterface {
         twitterClient.stopStream();
         if (observer!= null && !observer.isDisposed()){
             Log.d(TAG, "Stopping stream.");
-            observer.onNext(new BVMessage(getString(R.string.stream_closed_message)));
+            observer.onNext(new BVMessageModel(getString(R.string.stream_closed_message)));
             observer.dispose();
         }
         observer = null;
     }
 
     @Override
-    public List<BVTweet> getTweets() {
+    public List<BVTweetModel> getTweets() {
         return tweets;
     }
 

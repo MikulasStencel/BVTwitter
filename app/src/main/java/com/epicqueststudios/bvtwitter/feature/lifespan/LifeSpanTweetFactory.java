@@ -3,7 +3,7 @@ package com.epicqueststudios.bvtwitter.feature.lifespan;
 import android.app.Activity;
 
 import com.epicqueststudios.bvtwitter.interfaces.LifeSpanTweetInterface;
-import com.epicqueststudios.bvtwitter.model.BVTweet;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 
 
 public class LifeSpanTweetFactory {
@@ -25,7 +25,7 @@ public class LifeSpanTweetFactory {
         return null;
     }
 
-    public static LifeSpanTweetInterface createLifeSpanByTweet(BVTweet tweet){
+    public static LifeSpanTweetInterface createLifeSpanByTweet(BVTweetModel tweet){
         if (tweet.getName() != null)
             new TimeLifeSpan(DEFAULT_EXPIRE);
 

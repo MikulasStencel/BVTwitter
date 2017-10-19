@@ -6,17 +6,13 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
-import com.epicqueststudios.bvtwitter.feature.lifespan.KeepOnNoNetwork;
 import com.epicqueststudios.bvtwitter.feature.lifespan.LifeSpanTweetFactory;
-import com.epicqueststudios.bvtwitter.feature.lifespan.TimeLifeSpan;
-import com.epicqueststudios.bvtwitter.model.BVTweet;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.exceptions.OnErrorNotImplementedException;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
@@ -64,7 +60,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    public void addTweet(BVTweet tweet) {
+    public void addTweet(BVTweetModel tweet) {
         SQLiteDatabase db = DatabaseManager.getInstance().openDatabase(true);
         ContentValues values = new ContentValues();
         values.put(KEY_ID, tweet.getId());
@@ -74,8 +70,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         DatabaseManager.getInstance().closeDatabase();
     }
 
-    public List<BVTweet> getAllTweets(Activity context) {
-        List<BVTweet> tweetList = new ArrayList<BVTweet>();
+    public List<BVTweetModel> getAllTweets(Activity context) {
+        List<BVTweetModel> tweetList = new ArrayList<BVTweetModel>();
         String selectQuery = "SELECT  * FROM " + TABLE_TWEETS;
 
         SQLiteDatabase db = DatabaseManager.getInstance().openDatabase(false);
@@ -84,7 +80,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
             if (cursor.moveToFirst()) {
                 do {
-                    BVTweet tweet = new BVTweet(cursor.getString(cursor.getColumnIndexOrThrow(KEY_RAW_TEXT)));
+                    BVTweetModel tweet = new BVTweetModel(cursor.getString(cursor.getColumnIndexOrThrow(KEY_RAW_TEXT)));
                     // example of usage of KeepOnNoNetwork class
                     // tweet.setId(Integer.parseInt(cursor.getString(0)));
                     //tweet.setLifeSpan(KeepOnNoNetwork.getInstance(context));
@@ -102,7 +98,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return tweetList;
     }
 
-    public void deleteTweet(BVTweet tweet) {
+    public void deleteTweet(BVTweetModel tweet) {
         SQLiteDatabase db = DatabaseManager.getInstance().openDatabase(true);
         db.delete(TABLE_TWEETS, KEY_ID + " = ?",
                 new String[] { String.valueOf(tweet.getId()) });
@@ -115,10 +111,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         DatabaseManager.getInstance().closeDatabase();
     }
 
-    public void storeTweet(BVTweet tweet) {
+    public void storeTweet(BVTweetModel tweet) {
         dbEventBus.onNext(new DBMessage(tweet, DBMessage.BVEvent.ADD));
     }
-    public void removeTweet(BVTweet tweet) {
+    public void removeTweet(BVTweetModel tweet) {
         dbEventBus.onNext(new DBMessage(tweet, DBMessage.BVEvent.DELETE));
     }
 

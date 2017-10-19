@@ -1,13 +1,13 @@
 package com.epicqueststudios.bvtwitter.feature.sqlite;
 
-import com.epicqueststudios.bvtwitter.model.BVTweet;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 
 public class DBMessage {
     public enum BVEvent {ADD, DELETE}
 
-    public BVTweet tweet;
+    public BVTweetModel tweet;
     public BVEvent eventType;
-    public DBMessage(BVTweet tweet, BVEvent eventType){
+    public DBMessage(BVTweetModel tweet, BVEvent eventType){
         this.tweet = tweet;
         this.eventType = eventType;
     }
