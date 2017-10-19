@@ -89,7 +89,6 @@ public class MainActivity extends RxActivity implements ActivityInterface {
         searchEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
                 startStream();
-                // clear focus and hide soft keyboard
                 searchEditText.clearFocus();
                 InputMethodManager in = (InputMethodManager)this.getSystemService(Context.INPUT_METHOD_SERVICE);
                 in.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
@@ -125,11 +124,11 @@ public class MainActivity extends RxActivity implements ActivityInterface {
     @Override
     protected void onResume() {
         super.onResume();
-        Observable<Long> observer = cleaningRoutine.startProcess();
-        observer.subscribeWith(new DisposableObserver<Long>() {
+        Observable<List<BVTweet>> observer = cleaningRoutine.startProcess();
+        observer.subscribeWith(new DisposableObserver<List<BVTweet>>() {
             @Override
-            public void onNext(Long aLong) {
-                updateTweets(tweets);
+            public void onNext(List<BVTweet> otweets) {
+                updateTweets(otweets);
             }
 
             @Override
@@ -154,9 +153,9 @@ public class MainActivity extends RxActivity implements ActivityInterface {
             recyclerView.post(() -> {
                 progressBar.setVisibility(View.VISIBLE);
                 searchEditText.setText(last);
-                // do not open keyboard on the start
-                getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
-                 Observable.fromCallable(() -> databaseHandler.getAllTweets(this))
+                doNotOpenKeyboardOnStart();
+
+                Observable.fromCallable(() -> databaseHandler.getAllTweets(this))
                         .subscribeOn(Schedulers.io())
                         .observeOn(AndroidSchedulers.mainThread())
                         .subscribe( result -> {
@@ -167,6 +166,10 @@ public class MainActivity extends RxActivity implements ActivityInterface {
 
             });
         }
+    }
+
+    private void doNotOpenKeyboardOnStart() {
+        getWindow().setSoftInputMode(WindowManager.LayoutParams.SOFT_INPUT_STATE_HIDDEN);
     }
 
     private void updateTweets(List<BVTweet> result) {
@@ -214,7 +217,6 @@ public class MainActivity extends RxActivity implements ActivityInterface {
                     adapter.setTweets(tweets);
                 }
                 notifyAdapter();
-                // send async message to db to store tweet
                 if (bvTweet.useStorage())
                     databaseHandler.storeTweet(bvTweet);
             }

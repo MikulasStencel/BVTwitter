@@ -5,12 +5,11 @@ import android.util.Log;
 import com.epicqueststudios.bvtwitter.feature.sqlite.DatabaseHandler;
 import com.epicqueststudios.bvtwitter.interfaces.ActivityInterface;
 import com.epicqueststudios.bvtwitter.model.BVTweet;
-import com.epicqueststudios.bvtwitter.utils.NetworkUtils;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
-import io.reactivex.Notification;
 import io.reactivex.Observable;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableObserver;
@@ -19,11 +18,12 @@ import io.reactivex.schedulers.Schedulers;
 
 public class CleaningRoutine {
     private static final String TAG = CleaningRoutine.class.getSimpleName();
+    private static final long CHECK_EXPIRED_TWEETS_TIME_INTERVAL = 10000;
     private final Object tweetsLock;
     private final ActivityInterface activityInterface;
     private final DatabaseHandler databaseHandler;
     private DisposableObserver<Long> cleanRoutine = null;
-    private Observable<Long> cleanObserver;
+    private Observable<List<BVTweet>> cleanObserver;
 
     public CleaningRoutine(Object tweetsLock, ActivityInterface activityInterface, DatabaseHandler databaseHandler) {
         this.tweetsLock = tweetsLock;
@@ -31,59 +31,32 @@ public class CleaningRoutine {
         this.databaseHandler = databaseHandler;
     }
 
-   /* public void startProcess() {
-        cleanRoutine = Observable.interval(1000, 10000, TimeUnit.MILLISECONDS)
+    public Observable<List<BVTweet>> startProcess() {
+        cleanObserver = Observable.interval(1000, CHECK_EXPIRED_TWEETS_TIME_INTERVAL, TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
-                .doOnEach(v-> deleteExpiredTweets(v))
-                .observeOn(AndroidSchedulers.mainThread())
-
-                .subscribeWith(new DisposableObserver<Long>()  {
-
-                    @Override
-                    public void onNext(Long aLong) {
-                        updateTweets(tweets);
-                    }
-
-                    @Override
-                    public void onError(Throwable e) {
-                        Log.e(TAG, e.getMessage(), e);
-                    }
-
-                    @Override
-                    public void onComplete() {
-
-                    }
-                });
-    }*/
-
-    public Observable<Long> startProcess() {
-        cleanObserver = Observable.interval(1000, 10000, TimeUnit.MILLISECONDS)
-                .subscribeOn(Schedulers.io())
-                .doOnEach(v-> deleteExpiredTweets(v))
+                .map(a -> checkAndDeleteExpiredTweets(activityInterface.getTweets()))
                 .observeOn(AndroidSchedulers.mainThread());
         return cleanObserver;
     }
 
-    private void deleteExpiredTweets(Notification<Long> notification) {
+    private List<BVTweet> checkAndDeleteExpiredTweets(List<BVTweet> oldTweets) {
         if (!activityInterface.isOnline()){
-            // do not delete tweets when uer is online
-            return;
+            return oldTweets;
         }
-        Log.d(TAG, "start cleaning routine "+notification.getValue());
+        Log.d(TAG, "-- start cleaning routine");
         synchronized (tweetsLock) {
-            List<BVTweet> tweets = activityInterface.getTweets();
-
             int deleted = 0;
             long now = System.currentTimeMillis();
-            for (int i = 0; i < tweets.size(); i++) {
-                if (tweets.get(i).isExpired(now)){
+            for (int i = 0; i < oldTweets.size(); i++) {
+                if (oldTweets.get(i).isExpired(now)){
                     deleted++;
-                    tweets.remove(i);
-                    databaseHandler.deleteTweet(tweets.get(i));
+                    oldTweets.remove(i);
+                    databaseHandler.deleteTweet(oldTweets.get(i));
                 }
             }
-            Log.d(TAG, "end of cleaning routine. "+deleted+" items removed.");
+            Log.d(TAG, "-- end of cleaning routine. "+deleted+" items removed.");
         }
+        return oldTweets;
     }
 
     public void onPause() {

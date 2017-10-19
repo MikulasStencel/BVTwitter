@@ -33,11 +33,8 @@ public class BVTweet{
             this.name = (user != null) ? user.optString("screen_name") : "";
             this.imageUrl = (user != null) ? user.optString("profile_image_url_https") : "";
         } catch (JSONException e) {
-            // Log.e(TAG, e.getMessage(), e);
         } catch (NumberFormatException e){
-            // Log.e(TAG, e.getMessage(), e);
         }catch (NullPointerException e){
-            // Log.e(TAG, e.getMessage(), e);
         }
     }
 

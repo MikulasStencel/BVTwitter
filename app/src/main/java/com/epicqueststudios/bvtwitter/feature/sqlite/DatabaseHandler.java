@@ -64,9 +64,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    // Adding new tweet
     public void addTweet(BVTweet tweet) {
-      //  Log.d(TAG, "store tweet id: "+tweet.getId());
         SQLiteDatabase db = DatabaseManager.getInstance().openDatabase(true);
         ContentValues values = new ContentValues();
         values.put(KEY_ID, tweet.getId());
@@ -76,7 +74,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         DatabaseManager.getInstance().closeDatabase();
     }
 
-    // Getting all tweets
     public List<BVTweet> getAllTweets(Activity context) {
         List<BVTweet> tweetList = new ArrayList<BVTweet>();
         String selectQuery = "SELECT  * FROM " + TABLE_TWEETS;
@@ -88,7 +85,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             if (cursor.moveToFirst()) {
                 do {
                     BVTweet tweet = new BVTweet(cursor.getString(cursor.getColumnIndexOrThrow(KEY_RAW_TEXT)));
-                    //tweet.setId(Integer.parseInt(cursor.getString(0)));
+                    // example of usage of KeepOnNoNetwork class
+                    // tweet.setId(Integer.parseInt(cursor.getString(0)));
                     //tweet.setLifeSpan(KeepOnNoNetwork.getInstance(context));
 
                     tweet.setLifeSpan(LifeSpanTweetFactory.createLifeSpanByType(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_LIFESPAN_TYPE)), context, LifeSpanTweetFactory.DEFAULT_EXPIRE));
@@ -104,7 +102,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return tweetList;
     }
 
-    // Deleting single tweet
     public void deleteTweet(BVTweet tweet) {
         SQLiteDatabase db = DatabaseManager.getInstance().openDatabase(true);
         db.delete(TABLE_TWEETS, KEY_ID + " = ?",

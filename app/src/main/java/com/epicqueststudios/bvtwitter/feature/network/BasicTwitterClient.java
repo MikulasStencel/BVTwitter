@@ -30,7 +30,6 @@ public class BasicTwitterClient {
     private static final String TAG = BasicTwitterClient.class.getSimpleName();
     private static final String STREAM_URL = "https://stream.twitter.com/1.1/statuses/filter.json?track=";
     private final Context context;
-    //  private static BasicTwitterClient instance;
 
     private OkHttpClient client = null;
     private boolean bKeepRunning = true;
@@ -38,13 +37,6 @@ public class BasicTwitterClient {
     public BasicTwitterClient(Context context){
         this.context = context;
     }
-
-    /*public synchronized static BasicTwitterClient getInstance(){
-        if (instance == null){
-            instance = new BasicTwitterClient();
-        }
-        return instance;
-    }*/
 
     public void stopStream(){
         bKeepRunning = false;
@@ -88,14 +80,12 @@ public class BasicTwitterClient {
                     BasicTwitterClient.this.parseTweets(reader, tweetEmitter);
                 } else {
                     Log.e(TAG, "Unsuccessful attempt to open stream.");
-                  //  tweetEmitter.onNext(new BVMessage(context.getString(R.string.stream_closed_message)));
                     tweetEmitter.onError(new IOException(response.code() + ": " + response.body().string()));
                     return;
                 }
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
                 if (!tweetEmitter.isDisposed()) {
-                 //   tweetEmitter.onNext(new BVMessage(context.getString(R.string.stream_closed_message)));
                     tweetEmitter.onError(e);
                 }
                 return;
@@ -113,7 +103,6 @@ public class BasicTwitterClient {
             String line = "";
             do {
                 line = reader.readLine();
-                //Log.d(TAG, "Stream active: " + bKeepRunning + "  Line: [" + line+"]");
                 if (line == null || line.isEmpty()) {
                     continue;
                 }
