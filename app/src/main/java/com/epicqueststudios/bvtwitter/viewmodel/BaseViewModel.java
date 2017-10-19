@@ -2,12 +2,13 @@ package com.epicqueststudios.bvtwitter.viewmodel;
 
 import android.arch.lifecycle.ViewModel;
 import android.databinding.Observable;
+import android.databinding.ObservableBoolean;
 import android.databinding.ObservableField;
 import android.databinding.PropertyChangeRegistry;
 
 public class BaseViewModel extends ViewModel implements Observable {
     private PropertyChangeRegistry registry = new PropertyChangeRegistry();
-    private ObservableField<Boolean> isLoading = new ObservableField<>(false);
+    private ObservableBoolean isLoading = new ObservableBoolean(false);
     @Override
     public void addOnPropertyChangedCallback(OnPropertyChangedCallback callback) {
         registry.add(callback);
@@ -19,7 +20,7 @@ public class BaseViewModel extends ViewModel implements Observable {
     public void setIsLoading(boolean isLoading) {
         this.isLoading.set(isLoading);
     }
-    public ObservableField<Boolean> getIsLoading() {
+    public ObservableBoolean getIsLoading() {
         return isLoading;
     }
 }
