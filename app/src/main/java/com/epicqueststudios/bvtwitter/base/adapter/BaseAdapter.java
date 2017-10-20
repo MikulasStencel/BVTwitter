@@ -13,12 +13,8 @@ import com.epicqueststudios.bvtwitter.base.interfaces.OnItemClickInterface;
 
 public abstract class BaseAdapter<T> extends RecyclerView.Adapter<BaseAdapter<T>.BaseViewHolder> {
 
-    protected final OnItemClickInterface<T> listener;
-    private final Fragment fragment;
+    public BaseAdapter() {
 
-    public BaseAdapter(OnItemClickInterface<T> listener, Fragment fragment) {
-        this.listener = listener;
-        this.fragment = fragment;
     }
 
     @Override
@@ -30,7 +26,7 @@ public abstract class BaseAdapter<T> extends RecyclerView.Adapter<BaseAdapter<T>
 
     @Override
     public void onBindViewHolder(BaseAdapter<T>.BaseViewHolder holder, int position) {
-        holder.bind(getItemForPosition(position), fragment);
+        holder.bind(getItemForPosition(position));
     }
 
     @Override
@@ -52,11 +48,11 @@ public abstract class BaseAdapter<T> extends RecyclerView.Adapter<BaseAdapter<T>
         }
 
 
-        public void bind(final T item, final Fragment fragment) {
+        public void bind(final T item) {
            // binding.setVariable(BR.obj, item);
             binding.executePendingBindings();
 
-            itemView.setOnClickListener(v -> listener.onItemClick(item));
+            //itemView.setOnClickListener(v -> listener.onItemClick(item));
         }
     }
 

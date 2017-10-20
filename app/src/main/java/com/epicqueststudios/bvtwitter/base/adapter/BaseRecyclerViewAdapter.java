@@ -30,7 +30,6 @@ public abstract class BaseRecyclerViewAdapter<ITEM_T, VIEW_MODEL_T extends BaseV
         return items.size();
     }
 
-
     public static class BaseViewHolder<T, VT extends BaseViewModel<T>>
             extends RecyclerView.ViewHolder {
 

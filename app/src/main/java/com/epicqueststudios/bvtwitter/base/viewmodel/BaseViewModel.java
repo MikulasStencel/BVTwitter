@@ -4,20 +4,16 @@ import android.arch.lifecycle.ViewModel;
 import android.databinding.Observable;
 import android.databinding.ObservableBoolean;
 import android.databinding.PropertyChangeRegistry;
+import android.support.annotation.Nullable;
 
-public abstract class BaseViewModel<ITEM_T>  extends ViewModel implements Observable {
-    private PropertyChangeRegistry registry = new PropertyChangeRegistry();
+public abstract class BaseViewModel<ITEM_T>  extends AbstractViewModel{
     private ObservableBoolean isLoading = new ObservableBoolean(false);
+    protected ITEM_T item;
 
-    @Override
-    public void addOnPropertyChangedCallback(OnPropertyChangedCallback callback) {
-        registry.add(callback);
+    public BaseViewModel(State savedInstanceState) {
+        super(savedInstanceState);
     }
 
-    @Override
-    public void removeOnPropertyChangedCallback(OnPropertyChangedCallback callback) {
-        registry.remove(callback);
-    }
     public void setIsLoading(boolean isLoading) {
         this.isLoading.set(isLoading);
     }
@@ -26,6 +22,9 @@ public abstract class BaseViewModel<ITEM_T>  extends ViewModel implements Observ
     }
 
 
-    public abstract void setItem(ITEM_T item);
+    public void setItem(ITEM_T item){
+        this.item = item;
+    }
+
 
 }

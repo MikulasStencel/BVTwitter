@@ -1,63 +1,54 @@
 package com.epicqueststudios.bvtwitter.feature.twitter.adapter;
 
-import android.support.v7.widget.RecyclerView;
+import android.databinding.ViewDataBinding;
 import android.view.LayoutInflater;
+import android.view.View;
 import android.view.ViewGroup;
 
 import com.epicqueststudios.bvtwitter.R;
-import com.epicqueststudios.bvtwitter.feature.twitter.model.BVMessageModel;
+import com.epicqueststudios.bvtwitter.base.adapter.BaseRecyclerViewAdapter;
+import com.epicqueststudios.bvtwitter.databinding.TweetItemWithImageBinding;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
-import com.epicqueststudios.bvtwitter.ui.viewholders.AbstractViewHolder;
-import com.epicqueststudios.bvtwitter.ui.viewholders.MessageViewHolder;
-import com.epicqueststudios.bvtwitter.ui.viewholders.TweetViewHolder;
+import com.epicqueststudios.bvtwitter.feature.twitter.viewmodel.TweetsItemViewModel;
 
-import java.util.List;
+import java.util.ArrayList;
 
-public class TweetAdapter extends RecyclerView.Adapter<AbstractViewHolder> {
+import butterknife.ButterKnife;
 
-    private static final int TYPE_TWEET = 1;
-    private static final int TYPE_MESSAGE = 2;
-    private List<BVTweetModel> tweets;
-
-    public TweetAdapter(List<BVTweetModel> tweets) {
-        super();
-        setTweets(tweets);
-    }
-
-    public void setTweets(List<BVTweetModel> tweets) {
-        this.tweets = tweets;
-    }
+public class TweetAdapter extends BaseRecyclerViewAdapter<BVTweetModel, TweetsItemViewModel> {
 
     @Override
-    public AbstractViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
-        switch (viewType){
-            case TYPE_MESSAGE: {
-                return new MessageViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.message_list_item, parent, false));
-            }
-            case TYPE_TWEET: {
-                return new TweetViewHolder(LayoutInflater.from(parent.getContext()).inflate(R.layout.tweet_list_item_with_image, parent, false));
-            }
+    public TweetViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
+        View itemView = LayoutInflater.from(parent.getContext())
+                .inflate(R.layout.tweet_list_item_with_image, parent, false);
+
+        TweetsItemViewModel viewModel = new TweetsItemViewModel();
+
+        TweetItemWithImageBinding binding = TweetItemWithImageBinding.bind(itemView);
+        binding.setViewModel(viewModel);
+
+        return new TweetViewHolder(itemView, binding, viewModel);
+    }
+
+    public void setItems(ArrayList<BVTweetModel> newItems) {
+        items.clear();
+        items.addAll(newItems);
+        notifyDataSetChanged();
+    }
+
+    public ArrayList<BVTweetModel> getItems() {
+        return items;
+    }
+
+    static class TweetViewHolder extends BaseViewHolder<BVTweetModel, TweetsItemViewModel> {
+
+        public TweetViewHolder(View itemView, ViewDataBinding binding, TweetsItemViewModel viewModel) {
+            super(itemView, binding, viewModel);
+            ButterKnife.bind(this, itemView);
         }
-        return null;
+
     }
 
-    @Override
-    public void onBindViewHolder(AbstractViewHolder holder, int position) {
-        BVTweetModel tweet = tweets.get(position);
-        holder.bindView(tweet);
-    }
-
-    @Override
-    public int getItemViewType(int position) {
-        if (tweets.get(position) instanceof BVMessageModel)
-            return TYPE_MESSAGE;
-        return TYPE_TWEET;
-    }
-
-    @Override
-    public int getItemCount() {
-        return tweets.size();
-    }
 
 
 }
