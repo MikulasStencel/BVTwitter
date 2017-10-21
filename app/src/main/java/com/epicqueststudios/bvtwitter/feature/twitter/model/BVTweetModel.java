@@ -107,6 +107,15 @@ public class BVTweetModel implements Parcelable {
         lifeSpan = (LifeSpanTweetInterface) in.readValue(LifeSpanTweetInterface.class.getClassLoader());
     }
 
+    public String toString() {
+        StringBuilder sb = new StringBuilder();
+        sb.append("Tweet ");
+        sb.append(getId());
+        sb.append(" author: ");
+        sb.append(getName());
+        return sb.toString();
+    }
+
     @Override
     public int describeContents() {
         return 0;

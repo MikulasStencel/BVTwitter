@@ -2,6 +2,7 @@ package com.epicqueststudios.bvtwitter.feature.twitter.viewmodel;
 
 
 import android.content.Context;
+import android.databinding.ObservableBoolean;
 import android.os.Parcel;
 import android.support.annotation.Nullable;
 import android.support.v7.widget.LinearLayoutManager;
@@ -20,8 +21,11 @@ import com.epicqueststudios.bvtwitter.interfaces.StorageInterface;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.concurrent.Callable;
 
+import io.reactivex.Flowable;
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
@@ -35,6 +39,7 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
     private DatabaseHandler databaseHandler;
     private BasicTwitterClient twitterClient;
     private DisposableObserver<List<BVTweetModel>> cleanObserver;
+    private final ObservableBoolean isRetryVisible = new ObservableBoolean(false);
 
     public TweetsViewModel(Context context, @Nullable State savedInstanceState) {
         super(savedInstanceState);
@@ -130,8 +135,12 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
         }*/
     }
 
-    public Observable<BVTweetModel> startStream(String text) {
-        Observable<BVTweetModel> stream = twitterClient.getStream(text);
+    public Flowable<BVTweetModel> startStream(String text) {
+        Flowable<BVTweetModel> stream = twitterClient.getStream(text);
+        stream = stream.doOnNext(bvTweetModel -> {
+            if (bvTweetModel.useStorage())
+                storeTweet(bvTweetModel);
+        });
         return stream;
     }
 
@@ -144,12 +153,15 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
         setItems(new ArrayList<>());
     }
 
-    public Observable<List<BVTweetModel>> loadFromDatabase() {
-        setIsLoading(true);
-        return Observable.fromCallable(() -> databaseHandler.getAllTweets()).observeOn(AndroidSchedulers.mainThread()).doOnNext(result -> {
-                setIsLoading(false);
-                setItems(result);
-            }
+
+    public Single<List<BVTweetModel>> loadFromDatabase() {
+        return Single.fromCallable(() -> databaseHandler.getAllTweets())
+                .doOnSubscribe(v -> setIsLoading(true))
+                .subscribeOn(AndroidSchedulers.mainThread())
+                .doOnSuccess(result -> {
+                    setIsLoading(false);
+                    setItems(result);
+                }
         );
     }
 
@@ -161,6 +173,16 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
             cleanObserver = null;
         }
     }
+
+    public void showRetry(boolean bShow) {
+        this.isRetryVisible.set(bShow);
+        this.isRetryVisible.notifyChange();
+    }
+
+    public ObservableBoolean getIsRetryVisible() {
+        return isRetryVisible;
+    }
+
 
     public void storeTweet(BVTweetModel tweet) {
         databaseHandler.storeTweet(tweet);

@@ -36,6 +36,8 @@ public class TweetAdapter extends BaseRecyclerViewAdapter<BVTweetModel, TweetIte
     }
 
     public void addItem(BVTweetModel newItem) {
+
+
         items.add(0,newItem);
         // Do not scroll position if list is on the top
         if (recyclerView!=null && recyclerView.computeVerticalScrollOffset() > MIN_AUTO_SCROLL_OFFSET) {

@@ -29,6 +29,7 @@ import com.epicqueststudios.bvtwitter.feature.twitter.viewmodel.TweetsViewModel;
 import com.epicqueststudios.bvtwitter.interfaces.ActivityInterface;
 import com.epicqueststudios.bvtwitter.utils.ListUtils;
 import com.epicqueststudios.bvtwitter.utils.NetworkUtils;
+import com.epicqueststudios.bvtwitter.utils.RxUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -36,8 +37,12 @@ import java.util.List;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import io.reactivex.Flowable;
+import io.reactivex.FlowableSubscriber;
 import io.reactivex.Observable;
+import io.reactivex.Single;
 import io.reactivex.android.schedulers.AndroidSchedulers;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
 
@@ -54,9 +59,6 @@ public class MainActivity extends BaseActivity implements ActivityInterface {
     @BindView(R.id.recycler_view)
     RecyclerView recyclerView;
 
-    @BindView(R.id.start)
-    Button buttonStart;
-
     @BindView(R.id.toolbar)
     Toolbar toolbar;
 
@@ -65,6 +67,8 @@ public class MainActivity extends BaseActivity implements ActivityInterface {
 
     @BindView(R.id.fab)
     FloatingActionButton actionButton;
+
+    private Disposable disposable;
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
@@ -94,12 +98,6 @@ public class MainActivity extends BaseActivity implements ActivityInterface {
                 }).show());
     }
 
-    private void hideKeyboard() {
-        InputMethodManager in = (InputMethodManager)this.getSystemService(Context.INPUT_METHOD_SERVICE);
-        in.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
-    }
-
-
     @Nullable
     @Override
     protected BaseViewModel createViewModel(@Nullable BaseViewModel.State savedViewModelState) {
@@ -125,9 +123,8 @@ public class MainActivity extends BaseActivity implements ActivityInterface {
                 doNotOpenKeyboardOnStart();
 
                 if (ListUtils.isEmpty(tweetsViewModel.getList())){
-                    Observable<List<BVTweetModel>> observable = tweetsViewModel.loadFromDatabase();
-                    compositeDisposable.add(observable.subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
+                    Single<List<BVTweetModel>> single = tweetsViewModel.loadFromDatabase();
+                    compositeDisposable.add(single.compose(RxUtils.applySingleOnMainThread())
                             .subscribe( result -> {
                                 startStream(last);
                             } ));
@@ -137,9 +134,7 @@ public class MainActivity extends BaseActivity implements ActivityInterface {
 
             });
         }
-
         tweetsViewModel.startCleaningRoutine(tweetsLock);
-
     }
 
     private void clearTweets() {
@@ -168,38 +163,29 @@ public class MainActivity extends BaseActivity implements ActivityInterface {
         stopStream();
         saveLastSearchedKeyword(text);
         Log.d(TAG, "Starting stream. text: "+text);
-        buttonStart.setVisibility(View.GONE);
-        Observable<BVTweetModel> stream = tweetsViewModel.startStream(text);
+        tweetsViewModel.showRetry(false);
+        Flowable<BVTweetModel> stream = tweetsViewModel.startStream(text);
+        disposable = stream.compose(RxUtils.applyFlowableOnMainThread()).subscribe(v -> {
+            tweetsViewModel.addTweet(v);
+        }, e -> onTweetStreamError(e), () -> onTweetStreamComplete());
 
-        observer = stream.observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribeWith(new DisposableObserver<BVTweetModel>() {
-            @Override
-            public void onNext(BVTweetModel bvTweetModel) {
-                synchronized (tweetsLock) {
-                    tweetsViewModel.addTweet(bvTweetModel);
-                    if (bvTweetModel.useStorage())
-                        tweetsViewModel.storeTweet(bvTweetModel);
-                }
-            }
+    }
 
-            @Override
-            public void onError(Throwable e) {
-                Log.e(TAG, "Observer Error: " + e.getMessage(), e);
-                Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                synchronized (tweetsLock) {
-                    tweetsViewModel.addTweet(new BVMessageModel(getString(R.string.stream_forced_to_close_message)));
-                }
-                buttonStart.setVisibility(View.VISIBLE);
-            }
+    private void onTweetStreamComplete() {
+        Log.d(TAG, "Observer onComplete: ");
+        synchronized (tweetsLock) {
+            tweetsViewModel.addTweet(new BVMessageModel(getString(R.string.stream_closed_message)));
+        }
+        tweetsViewModel.showRetry(true);
+    }
 
-            @Override
-            public void onComplete() {
-                Log.d(TAG, "Observer onComplete: ");
-                synchronized (tweetsLock) {
-                    tweetsViewModel.addTweet(new BVMessageModel(getString(R.string.stream_closed_message)));
-                }
-                buttonStart.setVisibility(View.VISIBLE);
-            }
-        });
+    private void onTweetStreamError(Throwable e) {
+        Log.e(TAG, "Observer Error: " + e.getMessage(), e);
+        Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
+        synchronized (tweetsLock) {
+            tweetsViewModel.addTweet(new BVMessageModel(getString(R.string.stream_forced_to_close_message)));
+        }
+        tweetsViewModel.showRetry(true);
     }
 
     private void stopStream() {
@@ -209,10 +195,22 @@ public class MainActivity extends BaseActivity implements ActivityInterface {
             observer.dispose();
         }
         observer = null;
+
+        if (disposable!= null && !disposable.isDisposed()){
+            Log.d(TAG, "Stopping stream.");
+            disposable.dispose();
+        }
+        disposable = null;
+
     }
 
     private void saveLastSearchedKeyword(String text) {
         PreferenceManager.getDefaultSharedPreferences(this).edit().putString(KEY_LAST_SEARCH, text).apply();
+    }
+
+    private void hideKeyboard() {
+        InputMethodManager in = (InputMethodManager)this.getSystemService(Context.INPUT_METHOD_SERVICE);
+        in.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
     }
 
     public boolean isOnline() {
