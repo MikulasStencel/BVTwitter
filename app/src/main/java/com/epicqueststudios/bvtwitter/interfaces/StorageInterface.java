@@ -1,9 +1,10 @@
 package com.epicqueststudios.bvtwitter.interfaces;
 
+
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 
-public interface LifeSpanTweetInterface {
-    boolean isExpired(BVTweetModel tweet, long now);
+import java.util.List;
 
-    int getID();
+public interface StorageInterface {
+    List<BVTweetModel> getList();
 }

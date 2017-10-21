@@ -6,17 +6,14 @@ import android.content.Context;
 import android.database.Cursor;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
-import android.util.Log;
 
-import com.epicqueststudios.bvtwitter.feature.lifespan.KeepOnNoNetwork;
 import com.epicqueststudios.bvtwitter.feature.lifespan.LifeSpanTweetFactory;
-import com.epicqueststudios.bvtwitter.feature.lifespan.TimeLifeSpan;
-import com.epicqueststudios.bvtwitter.model.BVTweet;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
+import com.epicqueststudios.bvtwitter.utils.ListUtils;
 
 import java.util.ArrayList;
 import java.util.List;
 
-import io.reactivex.exceptions.OnErrorNotImplementedException;
 import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
@@ -64,9 +61,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         onCreate(db);
     }
 
-    // Adding new tweet
-    public void addTweet(BVTweet tweet) {
-      //  Log.d(TAG, "store tweet id: "+tweet.getId());
+    public void addTweet(BVTweetModel tweet) {
         SQLiteDatabase db = DatabaseManager.getInstance().openDatabase(true);
         ContentValues values = new ContentValues();
         values.put(KEY_ID, tweet.getId());
@@ -76,9 +71,8 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         DatabaseManager.getInstance().closeDatabase();
     }
 
-    // Getting all tweets
-    public List<BVTweet> getAllTweets(Activity context) {
-        List<BVTweet> tweetList = new ArrayList<BVTweet>();
+    public List<BVTweetModel> getAllTweets() {
+        List<BVTweetModel> tweetList = new ArrayList<BVTweetModel>();
         String selectQuery = "SELECT  * FROM " + TABLE_TWEETS;
 
         SQLiteDatabase db = DatabaseManager.getInstance().openDatabase(false);
@@ -87,11 +81,12 @@ public class DatabaseHandler extends SQLiteOpenHelper {
 
             if (cursor.moveToFirst()) {
                 do {
-                    BVTweet tweet = new BVTweet(cursor.getString(cursor.getColumnIndexOrThrow(KEY_RAW_TEXT)));
-                    //tweet.setId(Integer.parseInt(cursor.getString(0)));
+                    BVTweetModel tweet = new BVTweetModel(cursor.getString(cursor.getColumnIndexOrThrow(KEY_RAW_TEXT)));
+                    // example of usage of KeepOnNoNetwork class
+                    // tweet.setId(Integer.parseInt(cursor.getString(0)));
                     //tweet.setLifeSpan(KeepOnNoNetwork.getInstance(context));
 
-                    tweet.setLifeSpan(LifeSpanTweetFactory.createLifeSpanByType(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_LIFESPAN_TYPE)), context, LifeSpanTweetFactory.DEFAULT_EXPIRE));
+                    tweet.setLifeSpan(LifeSpanTweetFactory.createLifeSpanByType(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_LIFESPAN_TYPE)), null, LifeSpanTweetFactory.DEFAULT_EXPIRE));
                     tweetList.add(tweet);
                 } while (cursor.moveToNext());
             }
@@ -104,11 +99,22 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         return tweetList;
     }
 
-    // Deleting single tweet
-    public void deleteTweet(BVTweet tweet) {
+    public void deleteTweet(BVTweetModel tweet) {
         SQLiteDatabase db = DatabaseManager.getInstance().openDatabase(true);
         db.delete(TABLE_TWEETS, KEY_ID + " = ?",
                 new String[] { String.valueOf(tweet.getId()) });
+        DatabaseManager.getInstance().closeDatabase();
+    }
+
+    public void deleteTweets(List<BVTweetModel> tweets) {
+        if (ListUtils.isEmpty(tweets)){
+            return;
+        }
+        SQLiteDatabase db = DatabaseManager.getInstance().openDatabase(true);
+        for (BVTweetModel tweet: tweets) {
+            db.delete(TABLE_TWEETS, KEY_ID + " = ?",
+                    new String[]{String.valueOf(tweet.getId())});
+        }
         DatabaseManager.getInstance().closeDatabase();
     }
 
@@ -118,10 +124,10 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         DatabaseManager.getInstance().closeDatabase();
     }
 
-    public void storeTweet(BVTweet tweet) {
+    public void storeTweet(BVTweetModel tweet) {
         dbEventBus.onNext(new DBMessage(tweet, DBMessage.BVEvent.ADD));
     }
-    public void removeTweet(BVTweet tweet) {
+    public void removeTweet(BVTweetModel tweet) {
         dbEventBus.onNext(new DBMessage(tweet, DBMessage.BVEvent.DELETE));
     }
 

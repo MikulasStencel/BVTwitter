@@ -1,6 +1,7 @@
-package com.epicqueststudios.bvtwitter.model;
+package com.epicqueststudios.bvtwitter.feature.twitter.model;
 
-import android.util.Log;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 import com.epicqueststudios.bvtwitter.interfaces.LifeSpanTweetInterface;
 import com.epicqueststudios.bvtwitter.utils.DateUtils;
@@ -9,9 +10,9 @@ import org.json.JSONException;
 import org.json.JSONObject;
 
 
-public class BVTweet{
+public class BVTweetModel implements Parcelable {
 
-    private static final String TAG = BVTweet.class.getSimpleName();
+    private static final String TAG = BVTweetModel.class.getSimpleName();
     protected String message;
     protected long id;
     protected long timeStamp = 0;
@@ -20,7 +21,7 @@ public class BVTweet{
     protected String imageUrl;
     protected LifeSpanTweetInterface lifeSpan;
 
-    public BVTweet(String line) {
+    public BVTweetModel(String line) {
         this.raw_text = line;
         JSONObject json;
         try {
@@ -33,11 +34,8 @@ public class BVTweet{
             this.name = (user != null) ? user.optString("screen_name") : "";
             this.imageUrl = (user != null) ? user.optString("profile_image_url_https") : "";
         } catch (JSONException e) {
-            // Log.e(TAG, e.getMessage(), e);
         } catch (NumberFormatException e){
-            // Log.e(TAG, e.getMessage(), e);
-        }catch (NullPointerException e){
-            // Log.e(TAG, e.getMessage(), e);
+        } catch (NullPointerException e){
         }
     }
 
@@ -47,7 +45,6 @@ public class BVTweet{
         }
         return DateUtils.formatDate(timeStamp).concat("     ").concat(name);
     }
-
 
     public String getImageUrl() {
         return imageUrl;
@@ -99,4 +96,43 @@ public class BVTweet{
             return false;
         return lifeSpan.isExpired(this, now);
     }
+
+    protected BVTweetModel(Parcel in) {
+        message = in.readString();
+        id = in.readLong();
+        timeStamp = in.readLong();
+        raw_text = in.readString();
+        name = in.readString();
+        imageUrl = in.readString();
+        lifeSpan = (LifeSpanTweetInterface) in.readValue(LifeSpanTweetInterface.class.getClassLoader());
+    }
+
+    @Override
+    public int describeContents() {
+        return 0;
+    }
+
+    @Override
+    public void writeToParcel(Parcel dest, int flags) {
+        dest.writeString(message);
+        dest.writeLong(id);
+        dest.writeLong(timeStamp);
+        dest.writeString(raw_text);
+        dest.writeString(name);
+        dest.writeString(imageUrl);
+        dest.writeValue(lifeSpan);
+    }
+
+    @SuppressWarnings("unused")
+    public static final Parcelable.Creator<BVTweetModel> CREATOR = new Parcelable.Creator<BVTweetModel>() {
+        @Override
+        public BVTweetModel createFromParcel(Parcel in) {
+            return new BVTweetModel(in);
+        }
+
+        @Override
+        public BVTweetModel[] newArray(int size) {
+            return new BVTweetModel[size];
+        }
+    };
 }

@@ -46,7 +46,6 @@ public class DatabaseManager
     {
         if( openCounter.incrementAndGet() == 1 )
         {
-            // Opening a new database
             database = (bWrite) ? databaseHandler.getWritableDatabase() : databaseHandler.getReadableDatabase();
         }
         return database;
@@ -56,7 +55,6 @@ public class DatabaseManager
     {
         if( openCounter.decrementAndGet() == 0 )
         {
-            // Closing database
             if( database != null )
                 database.close();
 

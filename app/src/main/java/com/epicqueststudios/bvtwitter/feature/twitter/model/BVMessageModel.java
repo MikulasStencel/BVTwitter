@@ -1,8 +1,8 @@
-package com.epicqueststudios.bvtwitter.model;
+package com.epicqueststudios.bvtwitter.feature.twitter.model;
 
-public class BVMessage extends BVTweet {
+public class BVMessageModel extends BVTweetModel {
 
-    public BVMessage(String message){
+    public BVMessageModel(String message){
         super("{}");
         this.message = message;
         this.timeStamp = System.currentTimeMillis();
