@@ -15,7 +15,7 @@ public abstract class BaseRecyclerViewAdapter<ITEM_T, VIEW_MODEL_T extends BaseV
         extends RecyclerView.Adapter<BaseRecyclerViewAdapter.BaseViewHolder<ITEM_T, VIEW_MODEL_T>> {
 
     protected final ArrayList<ITEM_T> items = new ArrayList<>();
-
+    protected RecyclerView recyclerView;
     public BaseRecyclerViewAdapter() {
         super();
     }
@@ -46,6 +46,18 @@ public abstract class BaseRecyclerViewAdapter<ITEM_T, VIEW_MODEL_T extends BaseV
             viewModel.setItem(item);
             binding.executePendingBindings();
         }
+    }
+
+    @Override
+    public void onAttachedToRecyclerView(RecyclerView recyclerView) {
+        super.onAttachedToRecyclerView(recyclerView);
+        this.recyclerView = recyclerView;
+    }
+
+    @Override
+    public void onDetachedFromRecyclerView(RecyclerView recyclerView) {
+        super.onDetachedFromRecyclerView(recyclerView);
+        this.recyclerView = null;
     }
 }
 

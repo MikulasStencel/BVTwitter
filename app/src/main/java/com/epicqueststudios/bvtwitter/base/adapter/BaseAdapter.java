@@ -1,14 +1,11 @@
 package com.epicqueststudios.bvtwitter.base.adapter;
 
-
 import android.databinding.DataBindingUtil;
 import android.databinding.ViewDataBinding;
-import android.support.v4.app.Fragment;
 import android.support.v7.widget.RecyclerView;
 import android.view.LayoutInflater;
 import android.view.ViewGroup;
 
-import com.epicqueststudios.bvtwitter.base.interfaces.OnItemClickInterface;
 
 
 public abstract class BaseAdapter<T> extends RecyclerView.Adapter<BaseAdapter<T>.BaseViewHolder> {

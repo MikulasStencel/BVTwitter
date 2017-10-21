@@ -1,5 +1,6 @@
 package com.epicqueststudios.bvtwitter.base.viewmodel;
 
+import android.databinding.ObservableBoolean;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.Nullable;
@@ -8,6 +9,7 @@ import android.support.v7.widget.RecyclerView;
 import com.epicqueststudios.bvtwitter.base.adapter.BaseRecyclerViewAdapter;
 
 public abstract class RecyclerViewViewModel<ITEM_T> extends BaseViewModel<ITEM_T> {
+    private final ObservableBoolean isLoading = new ObservableBoolean(false);
 
     RecyclerView.LayoutManager layoutManager;
     private Parcelable savedLayoutManagerState;
@@ -20,6 +22,14 @@ public abstract class RecyclerViewViewModel<ITEM_T> extends BaseViewModel<ITEM_T
         if (savedInstanceState instanceof RecyclerViewViewModelState) {
             savedLayoutManagerState = ((RecyclerViewViewModelState) savedInstanceState).layoutManagerState;
         }
+    }
+
+    public void setIsLoading(boolean isLoading) {
+        this.isLoading.set(isLoading);
+        this.isLoading.notifyChange();
+    }
+    public ObservableBoolean getIsLoading() {
+        return isLoading;
     }
 
     @Override

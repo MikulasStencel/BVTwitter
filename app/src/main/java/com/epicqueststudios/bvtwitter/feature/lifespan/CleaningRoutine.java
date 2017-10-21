@@ -5,7 +5,9 @@ import android.util.Log;
 import com.epicqueststudios.bvtwitter.feature.sqlite.DatabaseHandler;
 import com.epicqueststudios.bvtwitter.interfaces.ActivityInterface;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
+import com.epicqueststudios.bvtwitter.interfaces.StorageInterface;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.TimeUnit;
 
@@ -18,51 +20,46 @@ import io.reactivex.schedulers.Schedulers;
 public class CleaningRoutine {
     private static final String TAG = CleaningRoutine.class.getSimpleName();
     private static final long CHECK_EXPIRED_TWEETS_TIME_INTERVAL = 10000;
-    private final Object tweetsLock;
-    private final ActivityInterface activityInterface;
+    private final Object cleaningLock = new Object();
+    private final StorageInterface storageInterface;
     private final DatabaseHandler databaseHandler;
-    private DisposableObserver<Long> cleanRoutine = null;
+    private final ActivityInterface activityInterface;
     private Observable<List<BVTweetModel>> cleanObserver;
 
-    public CleaningRoutine(Object tweetsLock, ActivityInterface activityInterface, DatabaseHandler databaseHandler) {
-        this.tweetsLock = tweetsLock;
+    public CleaningRoutine(StorageInterface storageInterface, ActivityInterface activityInterface, DatabaseHandler databaseHandler) {
+        this.storageInterface = storageInterface;
         this.activityInterface = activityInterface;
         this.databaseHandler = databaseHandler;
     }
 
     public Observable<List<BVTweetModel>> startProcess() {
-        cleanObserver = Observable.interval(1000, CHECK_EXPIRED_TWEETS_TIME_INTERVAL, TimeUnit.MILLISECONDS)
+        cleanObserver = Observable.interval(5000, CHECK_EXPIRED_TWEETS_TIME_INTERVAL, TimeUnit.MILLISECONDS)
                 .subscribeOn(Schedulers.io())
-                .map(a -> checkAndDeleteExpiredTweets(activityInterface.getTweets()))
+                .map(a -> collectExpiredTweets(storageInterface.getList()))
                 .observeOn(AndroidSchedulers.mainThread());
+
         return cleanObserver;
     }
 
-    private List<BVTweetModel> checkAndDeleteExpiredTweets(List<BVTweetModel> oldTweets) {
+    private List<BVTweetModel> collectExpiredTweets(List<BVTweetModel> oldTweets) {
+        List<BVTweetModel> expiredTweets = new ArrayList<>();
         if (!activityInterface.isOnline()){
-            return oldTweets;
+            return expiredTweets;
         }
         Log.d(TAG, "-- start cleaning routine");
-        synchronized (tweetsLock) {
+        synchronized (cleaningLock) {
             int deleted = 0;
             long now = System.currentTimeMillis();
             for (int i = 0; i < oldTweets.size(); i++) {
                 if (oldTweets.get(i).isExpired(now)){
                     deleted++;
-                    oldTweets.remove(i);
-                    databaseHandler.deleteTweet(oldTweets.get(i));
+                    expiredTweets.add(oldTweets.get(i));
                 }
             }
+            databaseHandler.deleteTweets(expiredTweets);
             Log.d(TAG, "-- end of cleaning routine. "+deleted+" items removed.");
         }
         return oldTweets;
-    }
-
-    public void onPause() {
-        if (cleanRoutine != null && !cleanRoutine.isDisposed()) {
-            cleanRoutine.dispose();
-            cleanRoutine = null;
-        }
     }
 
 }

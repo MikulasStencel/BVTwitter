@@ -5,7 +5,7 @@ import android.content.Context;
 import android.util.Log;
 
 import com.epicqueststudios.bvtwitter.R;
-import com.epicqueststudios.bvtwitter.base.feature.BaseClientApi;
+import com.epicqueststudios.bvtwitter.base.BaseClientApi;
 import com.epicqueststudios.bvtwitter.feature.lifespan.LifeSpanTweetFactory;
 import com.epicqueststudios.bvtwitter.feature.lifespan.TimeLifeSpan;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVMessageModel;

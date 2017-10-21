@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
     <data>
         <variable
-            name="vm"
+            name="viewModel"
             type="com.epicqueststudios.bvtwitter.feature.twitter.viewmodel.TweetsViewModel" />
 
         <import type="android.view.View" />
@@ -26,7 +26,7 @@
             android:layout_height="wrap_content"
             android:layout_gravity="center"
             android:layout_marginTop="24dp"
-            android:visibility="@{vm.isLoading ? View.VISIBLE : View.GONE}"
+            android:visibility="@{viewModel.isLoading ? View.VISIBLE : View.GONE}"
             tools:visibility="visible"/>
 
         <android.support.v7.widget.RecyclerView
@@ -34,7 +34,8 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
-            android:scrollbars="vertical">
+            android:scrollbars="vertical"
+            app:recyclerViewViewModel="@{viewModel}">
 
         </android.support.v7.widget.RecyclerView>
 

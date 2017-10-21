@@ -5,8 +5,9 @@
     <data>
         <variable
             name="viewModel"
-            type="com.epicqueststudios.bvtwitter.feature.twitter.viewmodel.TweetsItemViewModel"/>
+            type="com.epicqueststudios.bvtwitter.feature.twitter.viewmodel.TweetItemViewModel"/>
     </data>
+
     <LinearLayout
         android:orientation="vertical"
         android:layout_width="match_parent"
@@ -36,11 +37,13 @@
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:layout_marginBottom="3dp"
+                    android:text="@{viewModel.getTitle()}"
                     tools:text="Title" />
 
                 <TextView
                     android:id="@+id/tv_tweet"
                     style="@style/TextStyleTweetMessage"
+                    android:text="@{viewModel.getMessage()}"
                     android:layout_width="match_parent"
                     android:layout_height="match_parent"
                     android:autoLink="web"

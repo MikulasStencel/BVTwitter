@@ -9,6 +9,7 @@ import android.database.sqlite.SQLiteOpenHelper;
 
 import com.epicqueststudios.bvtwitter.feature.lifespan.LifeSpanTweetFactory;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
+import com.epicqueststudios.bvtwitter.utils.ListUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -70,7 +71,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         DatabaseManager.getInstance().closeDatabase();
     }
 
-    public List<BVTweetModel> getAllTweets(Activity context) {
+    public List<BVTweetModel> getAllTweets() {
         List<BVTweetModel> tweetList = new ArrayList<BVTweetModel>();
         String selectQuery = "SELECT  * FROM " + TABLE_TWEETS;
 
@@ -85,7 +86,7 @@ public class DatabaseHandler extends SQLiteOpenHelper {
                     // tweet.setId(Integer.parseInt(cursor.getString(0)));
                     //tweet.setLifeSpan(KeepOnNoNetwork.getInstance(context));
 
-                    tweet.setLifeSpan(LifeSpanTweetFactory.createLifeSpanByType(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_LIFESPAN_TYPE)), context, LifeSpanTweetFactory.DEFAULT_EXPIRE));
+                    tweet.setLifeSpan(LifeSpanTweetFactory.createLifeSpanByType(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_LIFESPAN_TYPE)), null, LifeSpanTweetFactory.DEFAULT_EXPIRE));
                     tweetList.add(tweet);
                 } while (cursor.moveToNext());
             }
@@ -102,6 +103,18 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         SQLiteDatabase db = DatabaseManager.getInstance().openDatabase(true);
         db.delete(TABLE_TWEETS, KEY_ID + " = ?",
                 new String[] { String.valueOf(tweet.getId()) });
+        DatabaseManager.getInstance().closeDatabase();
+    }
+
+    public void deleteTweets(List<BVTweetModel> tweets) {
+        if (ListUtils.isEmpty(tweets)){
+            return;
+        }
+        SQLiteDatabase db = DatabaseManager.getInstance().openDatabase(true);
+        for (BVTweetModel tweet: tweets) {
+            db.delete(TABLE_TWEETS, KEY_ID + " = ?",
+                    new String[]{String.valueOf(tweet.getId())});
+        }
         DatabaseManager.getInstance().closeDatabase();
     }
 

@@ -4,7 +4,7 @@
     xmlns:tools="http://schemas.android.com/tools">
     <data>
         <variable
-            name="vm"
+            name="viewModel"
             type="com.epicqueststudios.bvtwitter.feature.twitter.viewmodel.TweetsViewModel" />
     </data>
 
@@ -46,7 +46,7 @@
 
         </android.support.design.widget.AppBarLayout>
 
-        <include layout="@layout/content_main" app:vm="@{vm}" />
+        <include layout="@layout/content_main" app:viewModel="@{viewModel}" />
 
         <android.support.design.widget.FloatingActionButton
             android:id="@+id/fab"
