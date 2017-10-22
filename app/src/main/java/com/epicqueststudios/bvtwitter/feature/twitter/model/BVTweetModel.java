@@ -2,12 +2,19 @@ package com.epicqueststudios.bvtwitter.feature.twitter.model;
 
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.widget.Toast;
 
+import com.epicqueststudios.bvtwitter.BVTwitterApplication;
 import com.epicqueststudios.bvtwitter.interfaces.LifeSpanTweetInterface;
+import com.epicqueststudios.bvtwitter.ui.activities.MainActivity;
 import com.epicqueststudios.bvtwitter.utils.DateUtils;
 
 import org.json.JSONException;
 import org.json.JSONObject;
+
+import javax.inject.Inject;
+
+import dagger.android.AndroidInjection;
 
 
 public class BVTweetModel implements Parcelable {
@@ -20,6 +27,11 @@ public class BVTweetModel implements Parcelable {
     protected String name;
     protected String imageUrl;
     protected LifeSpanTweetInterface lifeSpan;
+
+    @Inject
+    protected MainActivity activity;
+    @Inject
+    protected BVTwitterApplication app;
 
     public BVTweetModel(String line) {
         this.raw_text = line;

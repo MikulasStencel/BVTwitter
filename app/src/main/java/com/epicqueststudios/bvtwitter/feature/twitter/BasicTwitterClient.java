@@ -17,6 +17,9 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+
+import dagger.Provides;
 import io.reactivex.BackpressureStrategy;
 import io.reactivex.Flowable;
 import io.reactivex.FlowableEmitter;
@@ -40,7 +43,7 @@ public class BasicTwitterClient extends BaseClientApi {
     private boolean bKeepRunning = true;
 
     public BasicTwitterClient(Context context){
-        this.context = context;
+        this.context = context.getApplicationContext();
     }
 
     public void stopStream(){

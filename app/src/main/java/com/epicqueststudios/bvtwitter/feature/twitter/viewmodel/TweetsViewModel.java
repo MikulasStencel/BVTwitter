@@ -1,6 +1,7 @@
 package com.epicqueststudios.bvtwitter.feature.twitter.viewmodel;
 
 
+import android.app.Activity;
 import android.content.Context;
 import android.databinding.ObservableBoolean;
 import android.os.Parcel;
@@ -23,6 +24,10 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.concurrent.Callable;
 
+import javax.inject.Inject;
+
+import dagger.Component;
+import dagger.android.AndroidInjection;
 import io.reactivex.Flowable;
 import io.reactivex.Observable;
 import io.reactivex.Single;
@@ -33,15 +38,20 @@ import io.reactivex.schedulers.Schedulers;
 public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> implements StorageInterface {
     private static final String TAG = TweetsViewModel.class.getSimpleName();
     private final Context appContext;
+
+    private final BasicTwitterClient twitterClient;
+
     ArrayList<BVTweetModel> tweets;
     TweetAdapter adapter;
     private CleaningRoutine cleaningRoutine = null;
     private DatabaseHandler databaseHandler;
-    private BasicTwitterClient twitterClient;
+
+
     private DisposableObserver<List<BVTweetModel>> cleanObserver;
     private final ObservableBoolean isRetryVisible = new ObservableBoolean(false);
 
-    public TweetsViewModel(Context context, @Nullable State savedInstanceState) {
+    @Inject
+    public TweetsViewModel(Context context, @Nullable State savedInstanceState, BasicTwitterClient twitterClient) {
         super(savedInstanceState);
         appContext = context.getApplicationContext();
 
@@ -52,8 +62,8 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
         }
         adapter = new TweetAdapter();
         adapter.setItems(tweets);
-
-        twitterClient = new BasicTwitterClient(appContext);
+       // this.twitterClient = new BasicTwitterClient(appContext);
+        this.twitterClient = twitterClient;
         databaseHandler = new DatabaseHandler(context);
         cleaningRoutine = new CleaningRoutine(this, (ActivityInterface)context, databaseHandler);
     }

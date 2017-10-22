@@ -18,11 +18,13 @@ import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.epicqueststudios.bvtwitter.BVTwitterApplication;
 import com.epicqueststudios.bvtwitter.R;
 import com.epicqueststudios.bvtwitter.base.BaseActivity;
 import com.epicqueststudios.bvtwitter.base.viewmodel.BaseViewModel;
 import com.epicqueststudios.bvtwitter.databinding.ActivityMainBinding;
 import com.epicqueststudios.bvtwitter.feature.sqlite.DatabaseHandler;
+import com.epicqueststudios.bvtwitter.feature.twitter.BasicTwitterClient;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVMessageModel;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 import com.epicqueststudios.bvtwitter.feature.twitter.viewmodel.TweetsViewModel;
@@ -33,6 +35,8 @@ import com.epicqueststudios.bvtwitter.utils.RxUtils;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
@@ -45,8 +49,16 @@ import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
 import io.reactivex.schedulers.Schedulers;
+import okhttp3.OkHttpClient;
 
 public class MainActivity extends BaseActivity implements ActivityInterface {
+
+    BVTwitterApplication app;
+   // @Inject
+    BasicTwitterClient twitterClient;
+    @Inject
+    OkHttpClient okHttpClient;
+
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final int MIN_TEXT_LENGTH = 2;
@@ -101,7 +113,7 @@ public class MainActivity extends BaseActivity implements ActivityInterface {
     @Nullable
     @Override
     protected BaseViewModel createViewModel(@Nullable BaseViewModel.State savedViewModelState) {
-        tweetsViewModel = new TweetsViewModel(this, savedViewModelState);
+        tweetsViewModel = new TweetsViewModel(this, savedViewModelState, twitterClient);
         return tweetsViewModel;
     }
 
@@ -116,6 +128,7 @@ public class MainActivity extends BaseActivity implements ActivityInterface {
     @Override
     public void onResume() {
         super.onResume();
+
         final String last = PreferenceManager.getDefaultSharedPreferences(this).getString(KEY_LAST_SEARCH, null);
         if (last != null && !last.isEmpty()){
             recyclerView.post(() -> {
