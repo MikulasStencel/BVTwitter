@@ -1,9 +1,13 @@
 package com.epicqueststudios.bvtwitter.feature.twitter.model;
 
+import android.content.Context;
+import android.databinding.BindingAdapter;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.widget.ImageView;
 import android.widget.Toast;
 
+import com.bumptech.glide.Glide;
 import com.epicqueststudios.bvtwitter.BVTwitterApplication;
 import com.epicqueststudios.bvtwitter.interfaces.LifeSpanTweetInterface;
 import com.epicqueststudios.bvtwitter.ui.activities.MainActivity;

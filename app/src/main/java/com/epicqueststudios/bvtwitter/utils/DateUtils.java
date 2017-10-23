@@ -7,7 +7,7 @@ import java.util.TimeZone;
 
 public class DateUtils {
     public static String formatDate(long milliseconds) {
-        DateFormat sdf = new SimpleDateFormat("MMM' 'dd, yyyy' 'HH:mm");
+        DateFormat sdf = new SimpleDateFormat("MMM' 'dd, yyyy' 'HH:mm:ss");
         sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
         Calendar calendar = Calendar.getInstance();
         calendar.setTimeInMillis(milliseconds);

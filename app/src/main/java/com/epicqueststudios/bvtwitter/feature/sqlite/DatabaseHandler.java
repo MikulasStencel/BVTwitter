@@ -4,8 +4,10 @@ import android.app.Activity;
 import android.content.ContentValues;
 import android.content.Context;
 import android.database.Cursor;
+import android.database.sqlite.SQLiteConstraintException;
 import android.database.sqlite.SQLiteDatabase;
 import android.database.sqlite.SQLiteOpenHelper;
+import android.util.Log;
 
 import com.epicqueststudios.bvtwitter.feature.lifespan.LifeSpanTweetFactory;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
@@ -67,7 +69,11 @@ public class DatabaseHandler extends SQLiteOpenHelper {
         values.put(KEY_ID, tweet.getId());
         values.put(KEY_RAW_TEXT, tweet.getRaw());
         values.put(KEY_LIFESPAN_TYPE, tweet.getLifeSpanType());
-        db.insert(TABLE_TWEETS, null, values);
+        try {
+            db.insert(TABLE_TWEETS, null, values);
+        } catch (SQLiteConstraintException e){
+            Log.d(TAG, e.getMessage(), e);
+        }
         DatabaseManager.getInstance().closeDatabase();
     }
 

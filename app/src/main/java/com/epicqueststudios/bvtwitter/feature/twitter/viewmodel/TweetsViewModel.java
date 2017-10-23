@@ -62,8 +62,8 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
         }
         adapter = new TweetAdapter();
         adapter.setItems(tweets);
-       // this.twitterClient = new BasicTwitterClient(appContext);
-        this.twitterClient = twitterClient;
+        this.twitterClient = new BasicTwitterClient(appContext);
+        ////this.twitterClient = twitterClient;
         databaseHandler = new DatabaseHandler(context);
         cleaningRoutine = new CleaningRoutine(this, (ActivityInterface)context, databaseHandler);
     }
@@ -126,23 +126,23 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
 
     private void deleteTweets(List<BVTweetModel> expired, Object lock) {
         synchronized (lock){
-            /*for (BVTweetModel model: expired){
+            for (BVTweetModel model: expired){
                 removeIfExists(model);
-            }*/
-            this.tweets.removeAll(expired);
+            }
+           // this.tweets.removeAll(expired);
         }
     }
 
     private void removeIfExists(BVTweetModel model) {
-        if (this.tweets.contains(model)){
+       /* if (this.tweets.contains(model)){
             this.tweets.remove(model);
-        }
-       /* for (int i = 0; i < this.tweets.size(); i++) {
+        }*/
+        for (int i = 0; i < this.tweets.size(); i++) {
             if (this.tweets.get(i).getId() == model.getId()){
                 this.tweets.remove(tweets.get(i));
                 break;
             }
-        }*/
+        }
     }
 
     public Flowable<BVTweetModel> startStream(String text) {

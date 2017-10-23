@@ -1,14 +1,18 @@
 package com.epicqueststudios.bvtwitter.feature.twitter.viewmodel;
 
 
+import android.content.Context;
 import android.databinding.Bindable;
+import android.databinding.BindingAdapter;
 import android.databinding.ObservableBoolean;
+import android.util.Log;
 import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.epicqueststudios.bvtwitter.R;
 import com.epicqueststudios.bvtwitter.base.viewmodel.BaseViewModel;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
+import com.epicqueststudios.bvtwitter.utils.ListUtils;
 
 import butterknife.BindView;
 
@@ -27,17 +31,24 @@ public class TweetItemViewModel extends BaseViewModel<BVTweetModel> {
     @Override
     public void setItem(BVTweetModel item) {
         super.setItem(item);
-        String url = item.getImageUrl();
-       /* if (url != null && !url.isEmpty()){
-            Glide.with(item.getContext())
-                    .load(url)
-                    .into(image);
-        } else {
-            image.setImageResource(0);
-        }*/
-        notifyChange();
     }
 
+    @BindingAdapter("imageUrl")
+    public static void setImageUrl(ImageView imageView, String url) {
+
+        if (ListUtils.isEmpty(url)) {
+            imageView.setImageResource(0);
+            imageView.invalidate();
+            return;
+        }
+        Context context = imageView.getContext();
+        Glide.with(context).load(url).into(imageView);
+        imageView.invalidate();
+    }
+
+    public String getImageUrl(){
+        return item.getImageUrl();
+    }
     public void setIsLoading(boolean isLoading) {
         this.isLoading.set(isLoading);
     }
@@ -50,11 +61,6 @@ public class TweetItemViewModel extends BaseViewModel<BVTweetModel> {
     }
     public String getMessage(){
         return item.getMessage();
-    }
-
-    @Bindable
-    public String getVersion() {
-        return "todo";
     }
 
 }

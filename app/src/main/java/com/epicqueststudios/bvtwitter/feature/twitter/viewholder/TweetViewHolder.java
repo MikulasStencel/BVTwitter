@@ -30,5 +30,4 @@ public class TweetViewHolder extends BaseRecyclerViewAdapter.BaseViewHolder<BVTw
         super(itemView, binding, viewModel);
         ButterKnife.bind(this, itemView);
     }
-
 }

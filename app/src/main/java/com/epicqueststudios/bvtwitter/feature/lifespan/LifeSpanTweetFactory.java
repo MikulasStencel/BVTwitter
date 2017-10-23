@@ -9,7 +9,7 @@ import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 public class LifeSpanTweetFactory {
 
     public enum TYPE {KEEP_FOREVER, BASIC_TIME, KEEP_ON_NO_NETWORK, KEEP_ON_TOUCH}
-    public static final long DEFAULT_EXPIRE = 60000;
+    public static final long DEFAULT_EXPIRE = 360000;
 
     public static LifeSpanTweetInterface createLifeSpanByType(int index, Activity activity, Object...params){
         return createLifeSpanByType(TYPE.values()[index], activity, params);
