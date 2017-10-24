@@ -11,14 +11,14 @@ import dagger.android.AndroidInjection;
 import dagger.android.support.DaggerAppCompatActivity;
 import io.reactivex.disposables.CompositeDisposable;
 
-public abstract class BaseActivity extends DaggerAppCompatActivity {
+public abstract class BaseActivity extends AppCompatActivity/*  DaggerAppCompatActivity*/ {
     protected CompositeDisposable compositeDisposable;
     private static final String EXTRA_VIEW_MODEL_STATE = "viewModelState";
     private AbstractViewModel viewModel;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
-        //AndroidInjection.inject(this);
+      /// AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
         compositeDisposable = new CompositeDisposable();
         BaseViewModel.State savedViewModelState = null;

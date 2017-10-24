@@ -1,5 +1,6 @@
 package com.epicqueststudios.bvtwitter.ui.activities;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
@@ -14,7 +15,6 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
@@ -23,7 +23,8 @@ import com.epicqueststudios.bvtwitter.R;
 import com.epicqueststudios.bvtwitter.base.BaseActivity;
 import com.epicqueststudios.bvtwitter.base.viewmodel.BaseViewModel;
 import com.epicqueststudios.bvtwitter.databinding.ActivityMainBinding;
-import com.epicqueststudios.bvtwitter.feature.sqlite.DatabaseHandler;
+import com.epicqueststudios.bvtwitter.di.ActivityDependency;
+import com.epicqueststudios.bvtwitter.di.AppDependency;
 import com.epicqueststudios.bvtwitter.feature.twitter.BasicTwitterClient;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVMessageModel;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
@@ -33,7 +34,6 @@ import com.epicqueststudios.bvtwitter.utils.ListUtils;
 import com.epicqueststudios.bvtwitter.utils.NetworkUtils;
 import com.epicqueststudios.bvtwitter.utils.RxUtils;
 
-import java.util.ArrayList;
 import java.util.List;
 
 import javax.inject.Inject;
@@ -41,20 +41,29 @@ import javax.inject.Inject;
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
+import dagger.android.AndroidInjection;
+import dagger.android.AndroidInjector;
+import dagger.android.DispatchingAndroidInjector;
+import dagger.android.HasFragmentInjector;
 import io.reactivex.Flowable;
-import io.reactivex.FlowableSubscriber;
-import io.reactivex.Observable;
 import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
-import io.reactivex.schedulers.Schedulers;
 import okhttp3.OkHttpClient;
 
-public class MainActivity extends BaseActivity implements ActivityInterface {
+public class MainActivity extends BaseActivity implements ActivityInterface, HasFragmentInjector {
+    @Inject
+    AppDependency appDependency; // same object from App
+
+    @Inject
+    ActivityDependency activityDependency;
+
+    @Inject
+    DispatchingAndroidInjector<Fragment> fragmentInjector;
+
 
     BVTwitterApplication app;
-   // @Inject
+    //@Inject
     BasicTwitterClient twitterClient;
     @Inject
     OkHttpClient okHttpClient;
@@ -83,7 +92,13 @@ public class MainActivity extends BaseActivity implements ActivityInterface {
     private Disposable disposable;
 
     @Override
+    public final AndroidInjector<android.app.Fragment> fragmentInjector() {
+        return fragmentInjector;
+    }
+
+    @Override
     protected void onCreate(Bundle savedInstanceState){
+        AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
         ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         binding.setViewModel(tweetsViewModel);

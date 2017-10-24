@@ -62,8 +62,8 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
         }
         adapter = new TweetAdapter();
         adapter.setItems(tweets);
-       // this.twitterClient = new BasicTwitterClient(appContext);
-        this.twitterClient = twitterClient;
+        this.twitterClient = new BasicTwitterClient(appContext);
+      //  this.twitterClient = twitterClient;
         databaseHandler = new DatabaseHandler(context);
         cleaningRoutine = new CleaningRoutine(this, (ActivityInterface)context, databaseHandler);
     }
