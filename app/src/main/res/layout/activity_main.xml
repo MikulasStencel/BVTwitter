@@ -39,6 +39,8 @@
                     android:hint="@string/search_twitter"
                     android:inputType="textAutoComplete"
                     android:lines="1"
+                    android:onEditorAction="@{viewModel.onEditorAction}"
+                    android:text="@={viewModel.searchText}"
                     android:imeOptions="actionSearch"  />
 
             </android.support.v7.widget.Toolbar>
@@ -55,6 +57,7 @@
             android:layout_gravity="bottom|end"
             android:layout_margin="@dimen/fab_margin"
             android:layout_marginBottom="@dimen/fab_margin_bottom"
+            android:onClick="@{viewModel::onDeleteTweets}"
             app:srcCompat="@android:drawable/ic_menu_delete" />
 
     </android.support.design.widget.CoordinatorLayout>

@@ -46,6 +46,7 @@
             android:layout_alignParentBottom="true"
             android:text="@string/retry"
             android:visibility="@{viewModel.isRetryVisible ? View.VISIBLE : View.GONE}"
+            android:onClick="@{viewModel::onRetryClick}"
             tools:visibility="visible"/>
 
     </LinearLayout>

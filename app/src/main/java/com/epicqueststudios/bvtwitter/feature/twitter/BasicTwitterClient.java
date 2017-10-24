@@ -100,6 +100,9 @@ public class BasicTwitterClient extends BaseClientApi {
             } finally {
                 if (reader != null) {
                     reader.close();
+                    if (!tweetEmitter.isCancelled()) {
+                        tweetEmitter.onNext(new BVMessageModel(context.getString(R.string.stream_forced_to_close_message)));
+                    }
                     Log.d(TAG, "Stream closed.");
                 }
             }
