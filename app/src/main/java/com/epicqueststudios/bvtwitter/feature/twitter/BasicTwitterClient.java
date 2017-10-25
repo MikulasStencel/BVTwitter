@@ -17,6 +17,13 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+
+import dagger.Provides;
+import io.reactivex.BackpressureStrategy;
+import io.reactivex.Flowable;
+import io.reactivex.FlowableEmitter;
+import io.reactivex.FlowableOnSubscribe;
 import io.reactivex.Observable;
 import io.reactivex.ObservableEmitter;
 import io.reactivex.ObservableOnSubscribe;
@@ -36,7 +43,7 @@ public class BasicTwitterClient extends BaseClientApi {
     private boolean bKeepRunning = true;
 
     public BasicTwitterClient(Context context){
-        this.context = context;
+        this.context = context.getApplicationContext();
     }
 
     public void stopStream(){
@@ -66,8 +73,8 @@ public class BasicTwitterClient extends BaseClientApi {
         return new Request.Builder().url(streamUrl).build();
     }
 
-    public Observable<BVTweetModel> getStream(String text){
-        return Observable.create((ObservableOnSubscribe<BVTweetModel>) tweetEmitter -> {
+    public Flowable<BVTweetModel> getStream(String text){
+        return Flowable.create((FlowableOnSubscribe<BVTweetModel>) tweetEmitter -> {
             Request request = BasicTwitterClient.this.buildUrlRequest(STREAM_URL.concat(text));
             BufferedReader reader = null;
             try {
@@ -86,20 +93,23 @@ public class BasicTwitterClient extends BaseClientApi {
                 }
             } catch (IOException e) {
                 Log.e(TAG, e.getMessage(), e);
-                if (!tweetEmitter.isDisposed()) {
+                if (!tweetEmitter.isCancelled()) {
                     tweetEmitter.onError(e);
                 }
                 return;
             } finally {
                 if (reader != null) {
                     reader.close();
+                    if (!tweetEmitter.isCancelled()) {
+                        tweetEmitter.onNext(new BVMessageModel(context.getString(R.string.stream_forced_to_close_message)));
+                    }
                     Log.d(TAG, "Stream closed.");
                 }
             }
-        }).doOnSubscribe(v -> bKeepRunning = true);
+        }, BackpressureStrategy.BUFFER).doOnSubscribe(v -> bKeepRunning = true);
     }
 
-    private void parseTweets(BufferedReader reader, ObservableEmitter<BVTweetModel> tweetEmitter) {
+    private void parseTweets(BufferedReader reader, FlowableEmitter<BVTweetModel> tweetEmitter) {
         try {
             String line = "";
             do {
@@ -117,7 +127,7 @@ public class BasicTwitterClient extends BaseClientApi {
             tweetEmitter.onNext(new BVMessageModel(context.getString(R.string.stream_closed_message)));
             tweetEmitter.onComplete();
         } catch (Exception e) {
-            if (!tweetEmitter.isDisposed()) {
+            if (!tweetEmitter.isCancelled()) {
                 tweetEmitter.onError(e);
             }
         }

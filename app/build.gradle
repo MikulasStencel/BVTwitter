@@ -71,4 +71,9 @@ dependencies {
     // arch lifecycle - model-view-viewmodel
     implementation "android.arch.lifecycle:extensions:1.0.0-alpha9-1"
 
+    // dependency injector
+    compile 'com.google.dagger:dagger:2.11'
+    compile 'com.google.dagger:dagger-android-support:2.11'
+    annotationProcessor "com.google.dagger:dagger-compiler:2.11"
+    annotationProcessor 'com.google.dagger:dagger-android-processor:2.11'
 }

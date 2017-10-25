@@ -1,5 +1,6 @@
 package com.epicqueststudios.bvtwitter.ui.activities;
 
+import android.app.Fragment;
 import android.content.Context;
 import android.databinding.DataBindingUtil;
 import android.os.Bundle;
@@ -14,48 +15,65 @@ import android.view.View;
 import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
-import android.widget.Button;
 import android.widget.EditText;
 import android.widget.Toast;
 
+import com.epicqueststudios.bvtwitter.BVTwitterApplication;
 import com.epicqueststudios.bvtwitter.R;
 import com.epicqueststudios.bvtwitter.base.BaseActivity;
 import com.epicqueststudios.bvtwitter.base.viewmodel.BaseViewModel;
 import com.epicqueststudios.bvtwitter.databinding.ActivityMainBinding;
-import com.epicqueststudios.bvtwitter.feature.sqlite.DatabaseHandler;
+import com.epicqueststudios.bvtwitter.di.ActivityDependency;
+import com.epicqueststudios.bvtwitter.di.AppDependency;
+import com.epicqueststudios.bvtwitter.feature.twitter.BasicTwitterClient;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVMessageModel;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 import com.epicqueststudios.bvtwitter.feature.twitter.viewmodel.TweetsViewModel;
+import com.epicqueststudios.bvtwitter.feature.twitter.viewmodel.UIEvent;
 import com.epicqueststudios.bvtwitter.interfaces.ActivityInterface;
 import com.epicqueststudios.bvtwitter.utils.ListUtils;
 import com.epicqueststudios.bvtwitter.utils.NetworkUtils;
+import com.epicqueststudios.bvtwitter.utils.RxUtils;
 
-import java.util.ArrayList;
 import java.util.List;
+
+import javax.inject.Inject;
 
 import butterknife.BindView;
 import butterknife.ButterKnife;
 import butterknife.OnClick;
-import io.reactivex.Observable;
-import io.reactivex.android.schedulers.AndroidSchedulers;
+import dagger.android.AndroidInjection;
+import dagger.android.AndroidInjector;
+import dagger.android.DispatchingAndroidInjector;
+import dagger.android.HasFragmentInjector;
+import io.reactivex.Flowable;
+import io.reactivex.Single;
+import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
-import io.reactivex.schedulers.Schedulers;
+import okhttp3.OkHttpClient;
 
-public class MainActivity extends BaseActivity implements ActivityInterface {
+public class MainActivity extends BaseActivity implements ActivityInterface, HasFragmentInjector {
+    @Inject
+    AppDependency appDependency; // same object from App
+
+    @Inject
+    ActivityDependency activityDependency;
+
+    @Inject
+    DispatchingAndroidInjector<Fragment> fragmentInjector;
+
+
+    BVTwitterApplication app;
+    //@Inject
+    BasicTwitterClient twitterClient;
+    @Inject
+    OkHttpClient okHttpClient;
+
 
     private static final String TAG = MainActivity.class.getSimpleName();
-    private static final int MIN_TEXT_LENGTH = 2;
-    private static final int MAX_TEXT_LENGTH = 50;
-    private static final String KEY_LAST_SEARCH = "prefs_last_search";
     private TweetsViewModel tweetsViewModel;
     private DisposableObserver<BVTweetModel> observer;
     private Object tweetsLock = new Object();
-
-    @BindView(R.id.recycler_view)
-    RecyclerView recyclerView;
-
-    @BindView(R.id.start)
-    Button buttonStart;
 
     @BindView(R.id.toolbar)
     Toolbar toolbar;
@@ -63,156 +81,85 @@ public class MainActivity extends BaseActivity implements ActivityInterface {
     @BindView(R.id.edit_text_search)
     EditText searchEditText;
 
-    @BindView(R.id.fab)
-    FloatingActionButton actionButton;
+    @Override
+    public final AndroidInjector<android.app.Fragment> fragmentInjector() {
+        return fragmentInjector;
+    }
 
     @Override
     protected void onCreate(Bundle savedInstanceState){
+        AndroidInjection.inject(this);
         super.onCreate(savedInstanceState);
         ActivityMainBinding binding = DataBindingUtil.setContentView(this, R.layout.activity_main);
         binding.setViewModel(tweetsViewModel);
-
+        tweetsViewModel.getEvents().subscribe(event -> onUIEvent(event));
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
 
-        searchEditText.setOnEditorActionListener((v, actionId, event) -> {
+      /*  searchEditText.setOnEditorActionListener((v, actionId, event) -> {
             if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-                startStream();
+                tweetsViewModel.onRetryClick(null);
                 searchEditText.clearFocus();
                 hideKeyboard();
                 return true;
             }
             return false;
-        });
-
-        actionButton.setOnClickListener(view -> Snackbar.make(view, "Clear all tweets", Snackbar.LENGTH_LONG)
-                .setAction("Clear", new View.OnClickListener() {
-                    @Override
-                    public void onClick(View view) {
-                        clearTweets();
-                    }
-                }).show());
+        });*/
     }
 
-    private void hideKeyboard() {
-        InputMethodManager in = (InputMethodManager)this.getSystemService(Context.INPUT_METHOD_SERVICE);
-        in.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
-    }
+    private void onUIEvent(UIEvent event) {
+        Log.d(TAG, "event: "+event.toString());
+        switch (event.getType()){
+            case ADD_TWEET:
+                synchronized (tweetsLock) {
+                    tweetsViewModel.addTweet(new BVMessageModel(getString((int) event.getData())));
+                }
+                break;
+            case ON_ERROR:
+                Toast.makeText(MainActivity.this, R.string.stream_forced_to_close_message, Toast.LENGTH_SHORT).show();
+                synchronized (tweetsLock) {
+                    tweetsViewModel.addTweet(new BVMessageModel(((Exception) event.getData()).getMessage()));
+                }
+                break;
 
+        }
+    }
 
     @Nullable
     @Override
     protected BaseViewModel createViewModel(@Nullable BaseViewModel.State savedViewModelState) {
-        tweetsViewModel = new TweetsViewModel(this, savedViewModelState);
+        tweetsViewModel = new TweetsViewModel(this, savedViewModelState, twitterClient);
         return tweetsViewModel;
     }
-
 
     @Override
     protected void onPause() {
         super.onPause();
         tweetsViewModel.onPause();
-        stopStream();
+    }
+
+    @Override
+    protected void onDestroy() {
+        if (tweetsViewModel != null) {
+            tweetsViewModel.onDestroy();
+        }
+        super.onDestroy();
     }
 
     @Override
     public void onResume() {
         super.onResume();
-        final String last = PreferenceManager.getDefaultSharedPreferences(this).getString(KEY_LAST_SEARCH, null);
-        if (last != null && !last.isEmpty()){
-            recyclerView.post(() -> {
-                searchEditText.setText(last);
-                doNotOpenKeyboardOnStart();
-
-                if (ListUtils.isEmpty(tweetsViewModel.getList())){
-                    Observable<List<BVTweetModel>> observable = tweetsViewModel.loadFromDatabase();
-                    compositeDisposable.add(observable.subscribeOn(Schedulers.io())
-                            .observeOn(AndroidSchedulers.mainThread())
-                            .subscribe( result -> {
-                                startStream(last);
-                            } ));
-                } else {
-                    startStream(last);
-                }
-
-            });
+        final String last = PreferenceManager.getDefaultSharedPreferences(this).getString(TweetsViewModel.KEY_LAST_SEARCH, null);
+        if (!ListUtils.isEmpty(last)) {
+            doNotOpenKeyboardOnStart();
         }
-
-        tweetsViewModel.startCleaningRoutine(tweetsLock);
-
+        tweetsViewModel.onResume(last);
     }
 
-    private void clearTweets() {
-        synchronized (tweetsLock) {
-            tweetsViewModel.clearTweets();
-        }
-    }
 
-    @OnClick(R.id.start)
-    protected void startStream() {
-        String text = searchEditText.getText().toString().trim();
-        if (text.length() < MIN_TEXT_LENGTH){
-            Toast.makeText(this, getString(R.string.error_text_too_short), Toast.LENGTH_LONG).show();
-            return;
-        }
-        if (text.length() > MAX_TEXT_LENGTH){
-            Toast.makeText(this, getString(R.string.error_text_too_long), Toast.LENGTH_LONG).show();
-            return;
-        }
-
-        startStream(text);
-    }
-
-    protected void startStream(String text) {
-        tweetsViewModel.stopStream();
-        stopStream();
-        saveLastSearchedKeyword(text);
-        Log.d(TAG, "Starting stream. text: "+text);
-        buttonStart.setVisibility(View.GONE);
-        Observable<BVTweetModel> stream = tweetsViewModel.startStream(text);
-
-        observer = stream.observeOn(AndroidSchedulers.mainThread()).subscribeOn(Schedulers.io()).subscribeWith(new DisposableObserver<BVTweetModel>() {
-            @Override
-            public void onNext(BVTweetModel bvTweetModel) {
-                synchronized (tweetsLock) {
-                    tweetsViewModel.addTweet(bvTweetModel);
-                    if (bvTweetModel.useStorage())
-                        tweetsViewModel.storeTweet(bvTweetModel);
-                }
-            }
-
-            @Override
-            public void onError(Throwable e) {
-                Log.e(TAG, "Observer Error: " + e.getMessage(), e);
-                Toast.makeText(MainActivity.this, e.getMessage(), Toast.LENGTH_SHORT).show();
-                synchronized (tweetsLock) {
-                    tweetsViewModel.addTweet(new BVMessageModel(getString(R.string.stream_forced_to_close_message)));
-                }
-                buttonStart.setVisibility(View.VISIBLE);
-            }
-
-            @Override
-            public void onComplete() {
-                Log.d(TAG, "Observer onComplete: ");
-                synchronized (tweetsLock) {
-                    tweetsViewModel.addTweet(new BVMessageModel(getString(R.string.stream_closed_message)));
-                }
-                buttonStart.setVisibility(View.VISIBLE);
-            }
-        });
-    }
-
-    private void stopStream() {
-        if (observer!= null && !observer.isDisposed()){
-            Log.d(TAG, "Stopping stream.");
-            observer.onNext(new BVMessageModel(getString(R.string.stream_closed_message)));
-            observer.dispose();
-        }
-        observer = null;
-    }
-
-    private void saveLastSearchedKeyword(String text) {
-        PreferenceManager.getDefaultSharedPreferences(this).edit().putString(KEY_LAST_SEARCH, text).apply();
+    private void hideKeyboard() {
+        InputMethodManager in = (InputMethodManager)this.getSystemService(Context.INPUT_METHOD_SERVICE);
+        in.hideSoftInputFromWindow(searchEditText.getWindowToken(), 0);
     }
 
     public boolean isOnline() {

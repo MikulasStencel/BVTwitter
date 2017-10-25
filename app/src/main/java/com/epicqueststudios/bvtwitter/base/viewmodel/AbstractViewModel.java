@@ -26,6 +26,7 @@ public abstract class AbstractViewModel extends BaseObservable {
 
     }
 
+
     public static class State implements Parcelable {
 
         protected State(AbstractViewModel viewModel) {

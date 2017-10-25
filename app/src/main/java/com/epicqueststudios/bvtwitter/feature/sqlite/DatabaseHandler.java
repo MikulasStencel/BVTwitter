@@ -82,10 +82,6 @@ public class DatabaseHandler extends SQLiteOpenHelper {
             if (cursor.moveToFirst()) {
                 do {
                     BVTweetModel tweet = new BVTweetModel(cursor.getString(cursor.getColumnIndexOrThrow(KEY_RAW_TEXT)));
-                    // example of usage of KeepOnNoNetwork class
-                    // tweet.setId(Integer.parseInt(cursor.getString(0)));
-                    //tweet.setLifeSpan(KeepOnNoNetwork.getInstance(context));
-
                     tweet.setLifeSpan(LifeSpanTweetFactory.createLifeSpanByType(cursor.getInt(cursor.getColumnIndexOrThrow(KEY_LIFESPAN_TYPE)), null, LifeSpanTweetFactory.DEFAULT_EXPIRE));
                     tweetList.add(tweet);
                 } while (cursor.moveToNext());
