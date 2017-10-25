@@ -15,10 +15,10 @@ public abstract class RecyclerViewViewModel<ITEM_T> extends BaseViewModel<ITEM_T
     private Parcelable savedLayoutManagerState;
 
     protected abstract BaseRecyclerViewAdapter getAdapter();
-    protected abstract RecyclerView.LayoutManager createLayoutManager();
 
-    public RecyclerViewViewModel(@Nullable State savedInstanceState) {
+    public RecyclerViewViewModel(@Nullable State savedInstanceState, RecyclerView.LayoutManager layoutManager) {
         super(savedInstanceState);
+        this.layoutManager = layoutManager;
         if (savedInstanceState instanceof RecyclerViewViewModelState) {
             savedLayoutManagerState = ((RecyclerViewViewModelState) savedInstanceState).layoutManagerState;
         }
@@ -38,7 +38,6 @@ public abstract class RecyclerViewViewModel<ITEM_T> extends BaseViewModel<ITEM_T
     }
 
     public final void setupRecyclerView(RecyclerView recyclerView) {
-        layoutManager = createLayoutManager();
         if (savedLayoutManagerState != null) {
             layoutManager.onRestoreInstanceState(savedLayoutManagerState);
             savedLayoutManagerState = null;

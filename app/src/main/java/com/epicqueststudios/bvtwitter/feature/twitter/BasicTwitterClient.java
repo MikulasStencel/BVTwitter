@@ -50,7 +50,7 @@ public class BasicTwitterClient extends BaseClientApi {
         bKeepRunning = false;
     }
 
-    private OkHttpClient prepareClient(){
+    protected OkHttpClient prepareClient(){
         OkHttpOAuthConsumer consumer = new OkHttpOAuthConsumer( "deZ0o9TRsbHFMYG27K4GJs5JY",
                 "HZGfh9NyvekEDCOIkZDAsgCd0QyeywwCATCMkln8C5aZuPKZzc");
         consumer.setTokenWithSecret(	"918198327459696641-jVkuuOyqlvs7DiwEc6ZfHTBBdl3VOxp",
@@ -66,7 +66,7 @@ public class BasicTwitterClient extends BaseClientApi {
         return client;
     }
 
-    private Request buildUrlRequest(String streamUrl) {
+    protected Request buildUrlRequest(String streamUrl) {
         if (client == null){
             prepareClient();
         }
@@ -75,7 +75,7 @@ public class BasicTwitterClient extends BaseClientApi {
 
     public Flowable<BVTweetModel> getStream(String text){
         return Flowable.create((FlowableOnSubscribe<BVTweetModel>) tweetEmitter -> {
-            Request request = BasicTwitterClient.this.buildUrlRequest(STREAM_URL.concat(text));
+            Request request = buildUrlRequest(STREAM_URL.concat(text));
             BufferedReader reader = null;
             try {
                 tweetEmitter.onNext(new BVMessageModel(context.getString(R.string.connecting_to_stream_message) + " " +text));
@@ -109,7 +109,7 @@ public class BasicTwitterClient extends BaseClientApi {
         }, BackpressureStrategy.BUFFER).doOnSubscribe(v -> bKeepRunning = true);
     }
 
-    private void parseTweets(BufferedReader reader, FlowableEmitter<BVTweetModel> tweetEmitter) {
+    protected void parseTweets(BufferedReader reader, FlowableEmitter<BVTweetModel> tweetEmitter) {
         try {
             String line = "";
             do {
@@ -131,5 +131,9 @@ public class BasicTwitterClient extends BaseClientApi {
                 tweetEmitter.onError(e);
             }
         }
+    }
+
+    protected OkHttpClient getClient(){
+        return client;
     }
 }
