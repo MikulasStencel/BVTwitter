@@ -1,12 +1,8 @@
 package com.epicqueststudios.bvtwitter.feature.twitter.adapter;
 
-import android.databinding.BindingMethod;
-import android.databinding.BindingMethods;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.EditText;
-
 import com.epicqueststudios.bvtwitter.R;
 import com.epicqueststudios.bvtwitter.base.adapter.BaseRecyclerViewAdapter;
 import com.epicqueststudios.bvtwitter.databinding.TweetItemWithImageBinding;
@@ -21,8 +17,6 @@ import java.util.List;
 public class TweetAdapter extends BaseRecyclerViewAdapter<BVTweetModel, TweetItemViewModel> {
 
     private static final int MIN_AUTO_SCROLL_OFFSET = 60;
-
-
 
     @Override
     public TweetViewHolder onCreateViewHolder(ViewGroup parent, int viewType) {
@@ -41,8 +35,6 @@ public class TweetAdapter extends BaseRecyclerViewAdapter<BVTweetModel, TweetIte
     }
 
     public void addItem(BVTweetModel newItem) {
-
-
         items.add(0,newItem);
         // Do not scroll position if list is on the top
         if (recyclerView!=null && recyclerView.computeVerticalScrollOffset() > MIN_AUTO_SCROLL_OFFSET) {

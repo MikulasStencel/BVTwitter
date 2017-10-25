@@ -2,7 +2,7 @@ package com.epicqueststudios.bvtwitter.feature.twitter.viewmodel;
 
 
 public class UIEvent {
-    public enum TYPE {ON_ERROR, ADD_TWEET};
+    public enum TYPE {ON_ERROR, ADD_TWEET, SAVE_LAST_SEARCHED_QUERY};
 
     public TYPE getType() {
         return type;

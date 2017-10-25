@@ -1,23 +1,19 @@
 package com.epicqueststudios.bvtwitter.feature.twitter.viewmodel;
 
 
-import android.app.Activity;
 import android.content.Context;
 import android.databinding.BindingMethod;
 import android.databinding.BindingMethods;
 import android.databinding.ObservableBoolean;
 import android.databinding.ObservableField;
 import android.os.Parcel;
-import android.preference.PreferenceManager;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.design.widget.Snackbar;
-import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.util.Log;
 import android.view.KeyEvent;
 import android.view.View;
-import android.view.WindowManager;
 import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
@@ -31,31 +27,21 @@ import com.epicqueststudios.bvtwitter.feature.lifespan.CleaningRoutine;
 import com.epicqueststudios.bvtwitter.feature.sqlite.DatabaseHandler;
 import com.epicqueststudios.bvtwitter.feature.twitter.BasicTwitterClient;
 import com.epicqueststudios.bvtwitter.feature.twitter.adapter.TweetAdapter;
-import com.epicqueststudios.bvtwitter.feature.twitter.model.BVMessageModel;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
-import com.epicqueststudios.bvtwitter.interfaces.ActivityInterface;
 import com.epicqueststudios.bvtwitter.interfaces.StorageInterface;
-import com.epicqueststudios.bvtwitter.ui.activities.MainActivity;
 import com.epicqueststudios.bvtwitter.utils.ListUtils;
 import com.epicqueststudios.bvtwitter.utils.RxUtils;
 
 import java.util.ArrayList;
 import java.util.List;
-import java.util.concurrent.Callable;
 
 import javax.inject.Inject;
 
-import dagger.Component;
-import dagger.android.AndroidInjection;
 import io.reactivex.Flowable;
-import io.reactivex.Observable;
-import io.reactivex.Scheduler;
 import io.reactivex.Single;
-import io.reactivex.android.schedulers.AndroidSchedulers;
 import io.reactivex.disposables.CompositeDisposable;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
-import io.reactivex.schedulers.Schedulers;
 import io.reactivex.subjects.PublishSubject;
 
 @BindingMethods({
@@ -66,7 +52,6 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
     private static final int MIN_TEXT_LENGTH = 2;
     private static final int MAX_TEXT_LENGTH = 50;
     public static final String KEY_LAST_SEARCH = "prefs_last_search";
-    private final Context appContext;
 
     private final BasicTwitterClient twitterClient;
 
@@ -85,9 +70,8 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
     private CompositeDisposable compositeDisposable;
 
     @Inject
-    public TweetsViewModel(Context context, @Nullable State savedInstanceState, BasicTwitterClient twitterClient) {
-        super(savedInstanceState);
-        appContext = context.getApplicationContext();
+    public TweetsViewModel(@Nullable State savedInstanceState, BasicTwitterClient twitterClient, DatabaseHandler databaseHandler, RecyclerView.LayoutManager layoutManager, TweetAdapter adapter) {
+        super(savedInstanceState, layoutManager);
 
         compositeDisposable = new CompositeDisposable();
 
@@ -96,22 +80,16 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
         } else {
             tweets = new ArrayList<>();
         }
-        adapter = new TweetAdapter();
+        //adapter = new TweetAdapter();
+        this.adapter = adapter;
         adapter.setItems(tweets);
-        this.twitterClient = new BasicTwitterClient(appContext);
-      //  this.twitterClient = twitterClient;
-        databaseHandler = new DatabaseHandler(context);
-        cleaningRoutine = new CleaningRoutine(this, (ActivityInterface)context, databaseHandler);
+        this.twitterClient = twitterClient;
+        this.databaseHandler = databaseHandler;
     }
 
     @Override
     protected BaseRecyclerViewAdapter getAdapter() {
         return adapter;
-    }
-
-    @Override
-    protected RecyclerView.LayoutManager createLayoutManager() {
-        return new LinearLayoutManager(appContext);
     }
 
     @Override
@@ -260,20 +238,20 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
 
     }
 
-    private void onTweetStreamComplete() {
+    protected void onTweetStreamComplete() {
         Log.d(TAG, "Observer onComplete: ");
         eventSubject.onNext(new UIEvent(UIEvent.TYPE.ADD_TWEET, R.string.stream_closed_message));
         showRetry(true);
     }
 
-    private void onTweetStreamError(Throwable e) {
+    protected void onTweetStreamError(Throwable e) {
         Log.e(TAG, "Observer Error: " + e.getMessage(), e);
         eventSubject.onNext(new UIEvent(UIEvent.TYPE.ON_ERROR, e));
         showRetry(true);
     }
 
     private void saveLastSearchedKeyword(String text) {
-        PreferenceManager.getDefaultSharedPreferences(appContext).edit().putString(KEY_LAST_SEARCH, text).apply();
+        eventSubject.onNext(new UIEvent(UIEvent.TYPE.SAVE_LAST_SEARCHED_QUERY, text));
     }
 
     private void stopTwitterStream() {
@@ -325,7 +303,7 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
 
     public boolean onEditorAction(@NonNull final TextView textView, final int actionId, @Nullable final KeyEvent keyEvent) {
         if (actionId == EditorInfo.IME_ACTION_SEARCH) {
-            onRetryClick(null); //TODO
+            onRetryClick(null);
             textView.clearFocus();
             hideKeyboard(textView);
             return true;
@@ -336,6 +314,10 @@ public class TweetsViewModel extends RecyclerViewViewModel<TweetsViewModel> impl
     private void hideKeyboard(View view) {
         InputMethodManager in = (InputMethodManager)view.getContext().getSystemService(Context.INPUT_METHOD_SERVICE);
         in.hideSoftInputFromWindow(view.getWindowToken(), 0);
+    }
+
+    public void setCleaningRoutine(CleaningRoutine cleaningRoutine) {
+        this.cleaningRoutine = cleaningRoutine;
     }
 
 

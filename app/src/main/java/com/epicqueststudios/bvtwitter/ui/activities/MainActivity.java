@@ -8,6 +8,7 @@ import android.preference.PreferenceManager;
 import android.support.annotation.Nullable;
 import android.support.design.widget.FloatingActionButton;
 import android.support.design.widget.Snackbar;
+import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
@@ -25,7 +26,10 @@ import com.epicqueststudios.bvtwitter.base.viewmodel.BaseViewModel;
 import com.epicqueststudios.bvtwitter.databinding.ActivityMainBinding;
 import com.epicqueststudios.bvtwitter.di.ActivityDependency;
 import com.epicqueststudios.bvtwitter.di.AppDependency;
+import com.epicqueststudios.bvtwitter.feature.lifespan.CleaningRoutine;
+import com.epicqueststudios.bvtwitter.feature.sqlite.DatabaseHandler;
 import com.epicqueststudios.bvtwitter.feature.twitter.BasicTwitterClient;
+import com.epicqueststudios.bvtwitter.feature.twitter.adapter.TweetAdapter;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVMessageModel;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
 import com.epicqueststudios.bvtwitter.feature.twitter.viewmodel.TweetsViewModel;
@@ -51,6 +55,8 @@ import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
 import io.reactivex.observers.DisposableObserver;
 import okhttp3.OkHttpClient;
+
+import static com.epicqueststudios.bvtwitter.feature.twitter.viewmodel.TweetsViewModel.KEY_LAST_SEARCH;
 
 public class MainActivity extends BaseActivity implements ActivityInterface, HasFragmentInjector {
     @Inject
@@ -121,14 +127,20 @@ public class MainActivity extends BaseActivity implements ActivityInterface, Has
                     tweetsViewModel.addTweet(new BVMessageModel(((Exception) event.getData()).getMessage()));
                 }
                 break;
-
+            case SAVE_LAST_SEARCHED_QUERY:
+                PreferenceManager.getDefaultSharedPreferences(this).edit().putString(KEY_LAST_SEARCH, (String) event.getData()).apply();
         }
     }
 
     @Nullable
     @Override
     protected BaseViewModel createViewModel(@Nullable BaseViewModel.State savedViewModelState) {
-        tweetsViewModel = new TweetsViewModel(this, savedViewModelState, twitterClient);
+        twitterClient = new BasicTwitterClient(this.getApplicationContext());
+        DatabaseHandler databaseHandler = new DatabaseHandler(this.getApplicationContext());
+        TweetAdapter adapter = new TweetAdapter();
+        tweetsViewModel = new TweetsViewModel(savedViewModelState, twitterClient, databaseHandler, new LinearLayoutManager(this.getApplicationContext()), adapter);
+        CleaningRoutine cleaningRoutine = new CleaningRoutine(tweetsViewModel, (ActivityInterface) this, databaseHandler);
+        tweetsViewModel.setCleaningRoutine(cleaningRoutine);
         return tweetsViewModel;
     }
 
@@ -149,7 +161,7 @@ public class MainActivity extends BaseActivity implements ActivityInterface, Has
     @Override
     public void onResume() {
         super.onResume();
-        final String last = PreferenceManager.getDefaultSharedPreferences(this).getString(TweetsViewModel.KEY_LAST_SEARCH, null);
+        final String last = PreferenceManager.getDefaultSharedPreferences(this).getString(KEY_LAST_SEARCH, null);
         if (!ListUtils.isEmpty(last)) {
             doNotOpenKeyboardOnStart();
         }
