@@ -3,8 +3,7 @@ package com.epicqueststudios.bvtwitter;
 import android.app.Activity;
 import android.app.Application;
 
-import com.epicqueststudios.bvtwitter.di.AppDependency;
-import com.epicqueststudios.bvtwitter.di.DaggerAppComponent;
+import com.epicqueststudios.bvtwitter.di.component.DaggerAppComponent;
 
 import javax.inject.Inject;
 
@@ -15,29 +14,20 @@ import dagger.android.HasActivityInjector;
 
 public class BVTwitterApplication extends Application implements HasActivityInjector {
     @Inject
-    AppDependency appDependency;
-
-    @Inject
-    DispatchingAndroidInjector<Activity> activityInjector;
+    DispatchingAndroidInjector<Activity> activityDispatchingAndroidInjector;
 
     @Override
     public void onCreate() {
         super.onCreate();
-        DaggerAppComponent.create().inject(this);
+        DaggerAppComponent.builder()
+                .application(this)
+                .build()
+                .inject(this);
     }
+
 
     @Override
     public AndroidInjector<Activity> activityInjector() {
-        return activityInjector;
+        return activityDispatchingAndroidInjector;
     }
-   /* @Override
-    protected AndroidInjector<? extends DaggerApplication> applicationInjector() {
-        return DaggerAppComponent.builder().create(this);
-    }*/
-  /*  @Override
-    protected AndroidInjector<? extends DaggerApplication> applicationInjector() {
-        AppComponent appComponent = DaggerAppComponent.builder().application(this).build();
-        appComponent.inject(this);
-        return appComponent;
-    }*/
 }
