@@ -1,15 +1,15 @@
 package com.epicqueststudios.bvtwitter.ui.activities;
 
-
-import com.epicqueststudios.bvtwitter.di.PerFragment;
-
 import dagger.Module;
-import dagger.android.ContributesAndroidInjector;
+import dagger.Provides;
 
 @Module
-public abstract class MainActivityModule {
+public class MainActivityModule {
 
-    /*@PerFragment
-    @ContributesAndroidInjector(modules = MainFragmentModule.class)
-    abstract MainFragment mainFragmentInjector();*/
+   /* @Provides
+    MainViewModel provideMainViewModel(DBService service) {
+        return new MainViewModel(service);
+    }*/
+
+
 }

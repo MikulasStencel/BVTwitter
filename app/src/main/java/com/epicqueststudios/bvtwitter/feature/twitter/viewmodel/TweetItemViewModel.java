@@ -52,7 +52,7 @@ public class TweetItemViewModel extends BaseViewModel<BVTweetModel> {
         return item.getImageUrl();
     }
 
-    @BindingAdapter({"bind:imageUrl"})
+    @BindingAdapter({"imageUrl"})
     public static void loadImage(ImageView view, String url) {
         if (ListUtils.isEmpty(url)){
             view.setImageResource(0);

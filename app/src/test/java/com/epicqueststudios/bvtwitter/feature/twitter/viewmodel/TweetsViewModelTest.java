@@ -27,6 +27,8 @@ import java.util.List;
 import java.util.concurrent.CountDownLatch;
 import java.util.concurrent.TimeUnit;
 
+import javax.inject.Inject;
+
 import io.reactivex.Flowable;
 import io.reactivex.Single;
 import io.reactivex.disposables.Disposable;
@@ -39,8 +41,10 @@ import static org.mockito.Mockito.*;
 public class TweetsViewModelTest {
     @Mock
     Context appContext;
-    @Mock
+    @InjectMocks
     BasicTwitterClient twitterClient;
+    @InjectMocks
+    DatabaseHandler databaseHandler;
     @Mock
     TweetAdapter adapter;
     TweetsViewModel tweetsViewModel;
@@ -48,8 +52,6 @@ public class TweetsViewModelTest {
     @Before
     public void setUp() {
         MockitoAnnotations.initMocks(this);
-        twitterClient = new BasicTwitterClient(appContext);
-        DatabaseHandler databaseHandler = new DatabaseHandler(appContext);
         tweetsViewModel = new TweetsViewModel(null, twitterClient, databaseHandler, new LinearLayoutManager(appContext), adapter);
         ActivityInterface activityInterface = () -> false;
         CleaningRoutine cleaningRoutine = new CleaningRoutine(tweetsViewModel, activityInterface, databaseHandler);

@@ -10,6 +10,7 @@ import com.epicqueststudios.bvtwitter.feature.lifespan.LifeSpanTweetFactory;
 import com.epicqueststudios.bvtwitter.feature.lifespan.TimeLifeSpan;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVMessageModel;
 import com.epicqueststudios.bvtwitter.feature.twitter.model.BVTweetModel;
+import com.epicqueststudios.bvtwitter.feature.twitter.model.TweetFactory;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -42,6 +43,10 @@ public class BasicTwitterClient extends BaseClientApi {
     private OkHttpClient client = null;
     private boolean bKeepRunning = true;
 
+    @Inject
+    TweetFactory tweetFactory;
+
+    @Inject
     public BasicTwitterClient(Context context){
         this.context = context.getApplicationContext();
     }
@@ -117,7 +122,8 @@ public class BasicTwitterClient extends BaseClientApi {
                 if (line == null || line.isEmpty()) {
                     continue;
                 }
-                BVTweetModel tweet = new BVTweetModel(line);
+                //BVTweetModel tweet = new BVTweetModel(line);
+                BVTweetModel tweet = tweetFactory.createTweet(line);
                 if (tweet.hasMessage()) {
                     tweet.setLifeSpan(new TimeLifeSpan(LifeSpanTweetFactory.DEFAULT_EXPIRE));
                     tweetEmitter.onNext(tweet);
