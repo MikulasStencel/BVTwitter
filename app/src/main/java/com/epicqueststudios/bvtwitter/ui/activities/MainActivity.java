@@ -9,9 +9,12 @@ import android.support.v7.widget.LinearLayoutManager;
 import android.support.v7.widget.RecyclerView;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.KeyEvent;
 import android.view.WindowManager;
+import android.view.inputmethod.EditorInfo;
 import android.view.inputmethod.InputMethodManager;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import com.epicqueststudios.bvtwitter.BVTwitterApplication;
@@ -73,6 +76,15 @@ public class MainActivity extends BaseActivity implements ActivityInterface {
         tweetsViewModel.getEvents().subscribe(event -> onUIEvent(event));
         ButterKnife.bind(this);
         setSupportActionBar(toolbar);
+        searchEditText.setOnEditorActionListener((v, actionId, event) -> {
+            if (actionId == EditorInfo.IME_ACTION_SEARCH) {
+                tweetsViewModel.onRetryClick(null);
+                searchEditText.clearFocus();
+                hideKeyboard();
+                return true;
+            }
+            return false;
+        });
     }
 
     private void onUIEvent(UIEvent event) {
